@@ -39,7 +39,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     let command = Command::from_string(command_string).expect("Command not recognized.");
     // TODO: Idea: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
-    let command_result: Result<(), Error> = match command {
+    match command {
         Full => full_battery(content),
         QuickNote => parse_note(content),
         Habit => {
@@ -51,10 +51,6 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
         Export => {
             todo!()
         }
-    };
-    match command_result {
-        Ok(_) => Ok(()),
-        Err(_) => panic!(),
     }
 }
 
