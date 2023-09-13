@@ -4,10 +4,16 @@ use std::io::Write;
 
 use json::JsonValue;
 
+mod errors;
+mod json_utils;
+
+use errors::{Error, ParsingCommandError};
+use json_utils::*;
+
 const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
 const MOCK_SETTINGS_PATH: &str = "mockdb/settings.json";
 
-fn main() -> Result<(), IOorParsingError> {
+fn main() -> Result<(), errors::Error> {
     let args: Vec<String> = env::args().collect();
     match args.len() {
         0 => {
@@ -16,52 +22,46 @@ fn main() -> Result<(), IOorParsingError> {
         1 => {
             println!("Insufficient arguments");
             // TODO: Help message. Only returning error for now.
-            return Err(IOorParsingError::Parsing(
-                ParsingCommandError::TooFewArguments,
-            ));
+            return Err(ParsingCommandError::TooFewArguments.into());
         }
         _ => {
             // Has command.
-            parse_command(&args[1], &args[2..])?;
+            parse_and_run_command(&args[1], &args[2..])?;
         }
     }
     Ok(())
 }
 
-fn parse_command(command_string: &str, content: &[String]) -> Result<(), IOorParsingError> {
+fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(), Error> {
     // Keep content as array because it's useful for some commands
     // that may take multiple commands (e.g.: `jurnalo habit add)
     use Command::*;
     let command = Command::from_string(command_string).expect("Command not recognized.");
     // TODO: Idea: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
-    let command_result = match command {
+    match command {
+        Full => full_battery(content),
         QuickNote => parse_note(content),
         Habit => {
             todo!()
         }
-        Full => full_battery(content),
         Print => {
             todo!()
         }
         Export => {
             todo!()
         }
-    };
-    match command_result {
-        Ok(_) => Ok(()),
-        Err(_) => panic!(),
     }
 }
 
-fn parse_note(content: &[String]) -> Result<(), IOorParsingError> {
+fn parse_note(content: &[String]) -> Result<(), Error> {
     let message = content.join(" ");
     if message.is_empty() {
         println!("You must provide a message with this command.")
     }
     match add_note(message) {
         Ok(_) => Ok(()),
-        Err(e) => Err(IOorParsingError::IO(e)),
+        Err(e) => Err(e.into()),
     }
 }
 
@@ -76,15 +76,13 @@ fn add_note(note: String) -> std::io::Result<()> {
     Ok(())
 }
 
-fn full_battery(content: &[String]) -> Result<(), IOorParsingError> {
+fn full_battery(content: &[String]) -> Result<(), Error> {
     // TODO: Idea: Maybe allow for variants of this? Probe the database for the keyword.
     // E.g.: jurnalo full day, jurnalo full week, jurnalo full social, ...
     // Then it's probably a good idea to just have the command itself (jurnalo day, jurnalo week, ...)
     // For now, complaining when there are extra words.
     if !content.is_empty() {
-        return Err(IOorParsingError::Parsing(
-            ParsingCommandError::TooManyArguments,
-        ));
+        return Err(ParsingCommandError::TooManyArguments.into());
     }
 
     let settings_raw =
@@ -141,23 +139,6 @@ fn full_battery(content: &[String]) -> Result<(), IOorParsingError> {
 //     todo!()
 // }
 
-// TODO: Make these a single kind of error.
-#[derive(Debug)]
-enum ParsingCommandError {
-    TooFewArguments,
-    CommandNotRecognized,
-    TooManyArguments,
-}
-
-#[derive(Debug)]
-enum IOorParsingError {
-    IO(std::io::Error),
-    Parsing(ParsingCommandError),
-    IncompatibleJSONType,
-}
-
-// impl From<T> for ParsingCommandError {}
-
 enum Command {
     Full,
     QuickNote,
@@ -176,42 +157,5 @@ impl Command {
             "export" => Ok(Command::Export),
             _ => Err(ParsingCommandError::CommandNotRecognized),
         }
-    }
-}
-
-fn get_key_from_object<'a>(
-    possible_object: &'a json::JsonValue,
-    key: &str,
-) -> Option<&'a JsonValue> {
-    match possible_object {
-        JsonValue::Object(keys) => keys.get(key),
-        _ => None,
-    }
-}
-
-fn get_key_from_object_as_str<'a>(
-    possible_object: &'a json::JsonValue,
-    key: &str,
-) -> Result<Option<&'a str>, IOorParsingError> {
-    match get_key_from_object(possible_object, key) {
-        Some(v) => match v {
-            JsonValue::Short(s) => Ok(Some(s.as_str())),
-            JsonValue::String(s) => Ok(Some(s)),
-            _ => Err(IOorParsingError::IncompatibleJSONType),
-        },
-        None => Ok(None),
-    }
-}
-
-fn get_key_from_object_as_vec<'a>(
-    possible_object: &'a json::JsonValue,
-    key: &str,
-) -> Result<Option<&'a Vec<JsonValue>>, IOorParsingError> {
-    match get_key_from_object(possible_object, key) {
-        Some(v) => match v {
-            JsonValue::Array(s) => Ok(Some(s)),
-            _ => Err(IOorParsingError::IncompatibleJSONType),
-        },
-        None => Ok(None),
     }
 }
