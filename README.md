@@ -11,33 +11,33 @@ This also works as a mood tracker and habit tracker.
 
 
 
-## Mock-up: 
+## Mock-up:
 
 
 ```
->> journalo full
+>> jurnalo full
 How are you?
 
 [1] great [2] good [3] meh [4] bad [5] terrible [c] custom
 
 > 1
 What's the weather like today?
-[1] Sunny [2] Cloudy [3] Rainy [4] Snowing [5] Warm [6] Cold ... 
+[1] Sunny [2] Cloudy [3] Rainy [4] Snowing [5] Warm [6] Cold ...
 
-> 1 3 6 
-What have you been up to? 
+> 1 3 6
+What have you been up to?
 [1] ... // (categories)
 
-> Coding 
+> Coding
 Which habits did you complete?
 [1] Meditation [2] *Gym [3] Running [4] Reading [5] Cleaning ... // (custom)
-> 1 2 : Gym was very intense today, now my legs are sore :( // (comment)
+> 1 2 : Gym was very intense today, now my legs are sore  // (comment)
 
 Finished logging today! Here are your current habit streaks:
 
                  S S M T W T F
-Meditation:      #   # #     # 
-Gym:               # #       # 
+Meditation:      #   # #     #
+Gym:               # #       #
 ...
 
 >>
@@ -46,17 +46,17 @@ Gym:               # #       #
 
 
 ```
->> journalo log Today was a great day! Had lunch with Monica.
+>> jurnalo log Today was a great day! Had lunch with Monica.
 Added "Today was a great day! Had lunch with Monica."
 ```
 
 ```
->> journalo print day|week|month|...
+>> jurnalo print day|week|month|...
 Shows the entries to this period in the stdout.
 ```
 
 ```
->> journalo export day|week|month|... -o filepath
-Creates a markdown file with all the entries in the period. 
+>> jurnalo export day|week|month|... -o filepath
+Creates a markdown file with all the entries in the period.
 ```
 
