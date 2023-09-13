@@ -28,6 +28,8 @@ fn parse_command(command_string: &String, content: &[String]) -> Result<(), IOor
     // that may take multiple commands (e.g.: `jurnalo habit add)
     use Command::*;
     let command = Command::from_string(&command_string).expect("Command not recognized.");
+    // TODO: Idea: have the Command take in the content and parse it.
+    // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     let command_result = match command {
         QuickNote => { parse_note(content) }
         Habit => { todo!() }
@@ -71,8 +73,8 @@ fn full_battery(content: &[String]) -> Result<(), IOorParsingError> {
     let settings = json::parse(&settings_raw).expect("Couldn't parse the JSON for questions.");
 
     // TODO: factor out this type-based value extraction. Dunno if we're even using JSON for serialization, so change nothing for now.
-    let questions: Vec<JsonValue> = match get_key_from_object(&settings, "questions") {
-        JsonValue::Array(q) => q,
+    let questions: &Vec<JsonValue> = match get_key_from_object(&settings, "questions") {
+        Some(JsonValue::Array(q)) => q,
         _ => panic!("`questions` is not a JSON Array.")
     };
 
@@ -80,31 +82,31 @@ fn full_battery(content: &[String]) -> Result<(), IOorParsingError> {
 
     for question in questions.iter() {
         // TODO: Make the order as specified by the battery.
-        let prompt: String = match get_key_from_object(question, "prompt") {
-            json::JsonValue::String(prompt_string) => {prompt_string},
-            json::JsonValue::Short(prompt_string) => {prompt_string.as_str().to_owned()}, // TODO: use refs/slices
+        let prompt: &str = match get_key_from_object(question, "prompt") {
+            Some(json::JsonValue::String(prompt_string)) => {prompt_string},
+            Some(json::JsonValue::Short(prompt_string)) => {prompt_string.as_str()}, // TODO: use refs/slices
             _ => {
                 dbg!(question);
                 panic!("`prompt` is not a JSON String.")
             }
         };
 
-        let options: Vec<JsonValue> = match get_key_from_object(question, "options") {
-            json::JsonValue::Array(vec_values) => {vec_values},
+        let options: &Vec<JsonValue> = match get_key_from_object(question, "options") {
+            Some(json::JsonValue::Array(vec_values)) => {vec_values},
             _ => panic!("`categories` is not a JSON Array.")
         };
 
 
-        let mut shortcut_label_pairs: Vec<(String, String)> = Vec::new();
+        let mut shortcut_label_pairs: Vec<(&str, &str)> = Vec::new();
         for option in options.iter() {
             let shortcut = match get_key_from_object(option, "shortcut") {
-                json::JsonValue::String(shortcut) => shortcut,
-                json::JsonValue::Short(shortcut) => {shortcut.as_str().to_owned()}, // TODO: use refs/slices
+                Some(json::JsonValue::String(shortcut)) => shortcut,
+                Some(json::JsonValue::Short(shortcut)) => {shortcut.as_str()}, // TODO: use refs/slices
                 _ => panic!("`shortcut` is not a JSON String.")
             };
             let label = match get_key_from_object(option, "label") {
-                json::JsonValue::String(label) => label,
-                json::JsonValue::Short(label) => {label.as_str().to_owned()}, // TODO: use refs/slices
+                Some(json::JsonValue::String(label)) => label,
+                Some(json::JsonValue::Short(label)) => {label.as_str()}, // TODO: use refs/slices
                 _ => panic!("`shortcut` is not a JSON String.")
             };
             shortcut_label_pairs.push((shortcut, label));
@@ -174,18 +176,16 @@ impl Command {
     }
 }
 
+enum ExpectedJsonType {
+    Object,
+    Array,
+    String,
+}
 
-fn get_key_from_object(possible_object: &json::JsonValue , key: &str) -> JsonValue {
+
+fn get_key_from_object<'a>(possible_object: &'a json::JsonValue , key: &str) -> Option<&'a JsonValue> {
     match possible_object {
-        JsonValue::Object(keys) => {
-            match keys.get(key){
-                Some(content) => {
-                    content.to_owned()
-                }
-                None => panic!("Key {} not found in the object.", key)
-            }
-        }
-        _ => panic!("This is not a JSON object.")
+        JsonValue::Object(keys) => keys.get(key),
+        _ => None
     }
-
 }
