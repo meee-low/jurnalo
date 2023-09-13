@@ -13,23 +13,20 @@ use json_utils::*;
 const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
 const MOCK_SETTINGS_PATH: &str = "mockdb/settings.json";
 
-fn main() -> Result<(), errors::Error> {
+fn main() -> Result<(), Error> {
     let args: Vec<String> = env::args().collect();
     match args.len() {
-        0 => {
-            unreachable!()
-        }
         1 => {
             println!("Insufficient arguments");
             // TODO: Help message. Only returning error for now.
-            return Err(ParsingCommandError::TooFewArguments.into());
+            Err(ParsingCommandError::TooFewArguments.into())
         }
-        _ => {
+        2.. => {
             // Has command.
-            parse_and_run_command(&args[1], &args[2..])?;
+            parse_and_run_command(&args[1], &args[2..])
         }
+        _ => unreachable!(),
     }
-    Ok(())
 }
 
 fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(), Error> {
@@ -89,19 +86,17 @@ fn full_battery(content: &[String]) -> Result<(), Error> {
         std::fs::read_to_string(MOCK_SETTINGS_PATH).expect("Couldn't open the settings JSON.");
     let settings = json::parse(&settings_raw).expect("Couldn't parse the JSON for questions.");
 
-    let questions: &Vec<JsonValue> =
-        get_key_from_object_as_vec(&settings, "questions")?.expect("Key not found");
+    let questions: &Vec<JsonValue> = get_key_from_object_as_vec(&settings, "questions")?;
     let mut inputs: Vec<String> = Vec::new();
 
     for question in questions.iter() {
-        let prompt: &str = get_key_from_object_as_str(question, "prompt")?.expect("Key not found");
-        let options: &Vec<JsonValue> =
-            get_key_from_object_as_vec(question, "options")?.expect("Key not found");
+        let prompt: &str = get_key_from_object_as_str(question, "prompt")?;
+        let options: &Vec<JsonValue> = get_key_from_object_as_vec(question, "options")?;
 
         let mut shortcut_label_pairs: Vec<(&str, &str)> = Vec::new();
         for option in options.iter() {
-            let shortcut = get_key_from_object_as_str(option, "shortcut")?.expect("Key not found");
-            let label = get_key_from_object_as_str(option, "label")?.expect("Key not found");
+            let shortcut = get_key_from_object_as_str(option, "shortcut")?;
+            let label = get_key_from_object_as_str(option, "label")?;
             shortcut_label_pairs.push((shortcut, label));
         }
 
@@ -155,7 +150,9 @@ impl Command {
             "habit" => Ok(Command::Habit),
             "print" => Ok(Command::Print),
             "export" => Ok(Command::Export),
-            _ => Err(ParsingCommandError::CommandNotRecognized),
+            _ => Err(ParsingCommandError::CommandNotRecognized(
+                command_string.to_owned(),
+            )),
         }
     }
 }

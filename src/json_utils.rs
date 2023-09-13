@@ -5,36 +5,39 @@ use crate::errors::JSONParsingError;
 fn get_key_from_object<'a>(
     possible_object: &'a json::JsonValue,
     key: &str,
-) -> Option<&'a JsonValue> {
+) -> Result<&'a JsonValue, JSONParsingError> {
     match possible_object {
-        JsonValue::Object(keys) => keys.get(key),
-        _ => None,
+        JsonValue::Object(keys) => match keys.get(key) {
+            Some(v) => Ok(v),
+            None => Err(JSONParsingError::KeyNotFound(key.to_owned())),
+        },
+        _ => Err(JSONParsingError::UnexpectedTypeForKey(key.to_owned())),
     }
 }
 
 pub fn get_key_from_object_as_str<'a>(
     possible_object: &'a json::JsonValue,
     key: &str,
-) -> Result<Option<&'a str>, JSONParsingError> {
+) -> Result<&'a str, JSONParsingError> {
     match get_key_from_object(possible_object, key) {
-        Some(v) => match v {
-            JsonValue::Short(s) => Ok(Some(s.as_str())),
-            JsonValue::String(s) => Ok(Some(s)),
-            _ => Err(JSONParsingError::UnexpectedTypeForKey),
+        Ok(v) => match v {
+            JsonValue::Short(s) => Ok(s.as_str()),
+            JsonValue::String(s) => Ok(s),
+            _ => Err(JSONParsingError::UnexpectedTypeForKey(key.to_owned())),
         },
-        None => Ok(None),
+        Err(e) => Err(e),
     }
 }
 
 pub fn get_key_from_object_as_vec<'a>(
     possible_object: &'a json::JsonValue,
     key: &str,
-) -> Result<Option<&'a Vec<JsonValue>>, JSONParsingError> {
+) -> Result<&'a Vec<JsonValue>, JSONParsingError> {
     match get_key_from_object(possible_object, key) {
-        Some(v) => match v {
-            JsonValue::Array(s) => Ok(Some(s)),
-            _ => Err(JSONParsingError::UnexpectedTypeForKey),
+        Ok(v) => match v {
+            JsonValue::Array(a) => Ok(a),
+            _ => Err(JSONParsingError::UnexpectedTypeForKey(key.to_owned())),
         },
-        None => Ok(None),
+        Err(e) => Err(e),
     }
 }
