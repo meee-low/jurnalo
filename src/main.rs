@@ -5,10 +5,10 @@ use std::io::Write;
 use json::JsonValue;
 
 mod errors;
-mod json_handling;
+mod json_utils;
 
 use errors::{Error, ParsingCommandError};
-use json_handling::*;
+use json_utils::*;
 
 const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
 const MOCK_SETTINGS_PATH: &str = "mockdb/settings.json";
