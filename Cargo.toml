@@ -7,7 +7,10 @@ edition = "2021"
 
 [dependencies]
 json = "0.12.4"
-diesel = { version = "2.1.1", features = ["sqlite"] }
+diesel = { version = "2.1.1", features = ["sqlite", "chrono"] }
+diesel_migrations= "2.1.0"
+chrono = "0.4.30"
+# serde = "1.0.188"
 dotenvy = "0.15"
 
 [[bin]]
