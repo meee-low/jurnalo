@@ -8,14 +8,14 @@ pub enum Error {
 #[derive(Debug)]
 pub enum ParsingCommandError {
     TooFewArguments,
-    CommandNotRecognized,
+    CommandNotRecognized(String),
     TooManyArguments,
 }
 #[derive(Debug)]
 pub enum JSONParsingError {
-    KeyNotFound,
-    EmptyValue,
-    UnexpectedTypeForKey,
+    KeyNotFound(String),
+    // EmptyValue,
+    UnexpectedTypeForKey(String),
 }
 
 impl From<std::io::Error> for Error {
