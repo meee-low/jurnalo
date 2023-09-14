@@ -24,26 +24,29 @@ fn main() {
 
 pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
     if is_database_empty(connection) {
-        create_basic_database(connection).unwrap()
+        dbg!("Trying to create database from scratch.");
+        create_basic_database(connection).unwrap();
+        dbg!("Created database.");
+    } else {
+        dbg!("Database is not empty! Proceding...");
     }
 }
 
 fn is_database_empty(_connection: &mut SqliteConnection) -> bool {
     // TODO: get it to work with the actual database, not just check if the file exists.
-    // use schema::entries::dsl::entries;
-    // use diesel::result::Error as dError;
-    // use diesel::result::DatabaseErrorInformation as dErrorInfo;
+    use diesel::result::DatabaseErrorKind as dErrorKind;
+    use diesel::result::Error as dError;
+    use schema::entries::dsl::entries;
 
-    // let count: i64 = match entries.count().first(connection){
-    //     Ok(v) => v,
-    //     Err(dError::DatabaseError(Unknown, d)) => return true,
-    //     Err(e) => panic!(e);
-    // };
-    // count == 0
-
-    let database_path: String = env::var("DATABASE_URL").expect("`DATABASE_URL` not set in .env");
-    let path = std::path::Path::new(&database_path);
-    !path.exists()
+    let count: i64 = match entries.count().first(_connection) {
+        Ok(v) => v,
+        Err(dError::DatabaseError(dErrorKind::Unknown, d)) => {
+            dbg!("{}", d);
+            return true;
+        }
+        Err(e) => panic!("{}", e),
+    };
+    count == 0
 }
 
 fn create_basic_database(
@@ -55,8 +58,4 @@ fn create_basic_database(
     Ok(())
 }
 
-
 // APIs
-
-
-// Post new entry
