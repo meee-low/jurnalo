@@ -32,20 +32,20 @@ fn main() -> Result<(), Error> {
 fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(), Error> {
     // Keep content as array because it's useful for some commands
     // that may take multiple commands (e.g.: `jurnalo habit add)
-    use Command::*;
+    use Command as C;
     let command = Command::from_string(command_string).expect("Command not recognized.");
     // TODO: Idea: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     match command {
-        Full => full_battery(content),
-        QuickNote => parse_note(content),
-        Habit => {
+        C::Full => full_battery(content),
+        C::QuickNote => parse_note(content),
+        C::Habit => {
             todo!()
         }
-        Print => {
+        C::Print => {
             todo!()
         }
-        Export => {
+        C::Export => {
             todo!()
         }
     }
