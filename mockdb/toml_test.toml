@@ -1,0 +1,54 @@
+[[questions]]
+id = 0
+label = "weather"
+prompt = "How is the weather today?"
+
+  [[questions.options]]
+  shortcut = "1"
+  label = "Sunny"
+
+  [[questions.options]]
+  shortcut = "2"
+  label = "Cloudy"
+
+  [[questions.options]]
+  shortcut = "3"
+  label = "Rainy"
+
+[[questions]]
+id = 1
+label = "mood"
+prompt = "How was your mood today?"
+
+  [[questions.options]]
+  shortcut = "1"
+  label = "Great!"
+
+  [[questions.options]]
+  shortcut = "2"
+  label = "Meh..."
+
+  [[questions.options]]
+  shortcut = "3"
+  label = "Terrible!!"
+
+[[questions]]
+id = 2
+label = "habits"
+prompt = "What habits did you accomplish today?"
+
+  [[questions.options]]
+  shortcut = "M"
+  label = "Meditation"
+
+  [[questions.options]]
+  shortcut = "R"
+  label = "Reading"
+
+  [[questions.options]]
+  shortcut = "G"
+  label = "Gym"
+
+[[batteries_of_questions]]
+command = "full"
+questions = [ 1, 0, 2 ]
