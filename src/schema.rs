@@ -43,9 +43,4 @@ diesel::joinable!(category_option -> options (option_id));
 diesel::joinable!(entries -> categories (category));
 diesel::joinable!(entries -> options (value));
 
-diesel::allow_tables_to_appear_in_same_query!(
-    categories,
-    category_option,
-    entries,
-    options,
-);
+diesel::allow_tables_to_appear_in_same_query!(categories, category_option, entries, options,);

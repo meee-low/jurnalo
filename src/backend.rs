@@ -8,6 +8,7 @@ use std::env;
 
 mod models;
 mod schema;
+mod toml_utils;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
