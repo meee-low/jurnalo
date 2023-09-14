@@ -1,22 +1,6 @@
 // @generated automatically by Diesel CLI.
 
 diesel::table! {
-    batteries (id) {
-        id -> Integer,
-        label -> Text,
-        command -> Nullable<Text>,
-    }
-}
-
-diesel::table! {
-    batteries_to_categories (id) {
-        id -> Integer,
-        battery_id -> Integer,
-        category_id -> Integer,
-    }
-}
-
-diesel::table! {
     categories (id) {
         id -> Integer,
         label -> Text,
@@ -28,17 +12,19 @@ diesel::table! {
 }
 
 diesel::table! {
-    category_option (id) {
+    category_types (id) {
         id -> Integer,
-        category_id -> Integer,
-        option_id -> Integer,
+        label -> Text,
     }
 }
 
 diesel::table! {
-    category_types (id) {
+    choices (id) {
         id -> Integer,
         label -> Text,
+        shortcut -> Text,
+        disabled_bool -> Integer,
+        category_label -> Text,
     }
 }
 
@@ -53,28 +39,32 @@ diesel::table! {
 }
 
 diesel::table! {
-    options (id) {
+    quizzes (id) {
         id -> Integer,
         label -> Text,
-        shortcut -> Text,
-        disabled_bool -> Integer,
+        command -> Nullable<Text>,
     }
 }
 
-diesel::joinable!(batteries_to_categories -> batteries (battery_id));
-diesel::joinable!(batteries_to_categories -> categories (category_id));
+diesel::table! {
+    quizzes_to_categories (id) {
+        id -> Integer,
+        quiz_id -> Integer,
+        category_id -> Integer,
+    }
+}
+
 diesel::joinable!(categories -> category_types (category_type));
-diesel::joinable!(category_option -> categories (category_id));
-diesel::joinable!(category_option -> options (option_id));
 diesel::joinable!(entries -> categories (category));
-diesel::joinable!(entries -> options (value));
+diesel::joinable!(entries -> choices (value));
+diesel::joinable!(quizzes_to_categories -> categories (category_id));
+diesel::joinable!(quizzes_to_categories -> quizzes (quiz_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
-    batteries,
-    batteries_to_categories,
     categories,
-    category_option,
     category_types,
+    choices,
     entries,
-    options,
+    quizzes,
+    quizzes_to_categories,
 );

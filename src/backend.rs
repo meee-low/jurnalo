@@ -70,7 +70,7 @@ fn create_basic_database(
 
 fn populate_db_from_toml(connection: &mut SqliteConnection, toml_path: &str) {
     use schema::categories::dsl::*;
-    use schema::options::dsl::*;
+    use schema::choices::dsl::*;
 
     let toml_data = load_toml(toml_path).expect("Couldn't load the data to the TOML.");
     let objects_to_insert = toml_to_db_query(&toml_data);
@@ -82,27 +82,27 @@ fn populate_db_from_toml(connection: &mut SqliteConnection, toml_path: &str) {
         .expect("Failed to write to database.");
 
     // Insert the choices for the questions.
-    diesel::insert_into(options)
+    diesel::insert_into(choices)
         .values(objects_to_insert.alternatives)
         .execute(connection)
         .expect("Failed to write to database.");
 }
 
 struct ObjectsToInsert {
-    categories: Vec<m_ins::Category>,
-    alternatives: Vec<m_ins::DBOption>,
+    categories: Vec<m_ins::NewCategory>,
+    alternatives: Vec<m_ins::NewChoice>,
     // categories_options: Option<Vec<m_ins::CategoryOption>>,
 }
 
 fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
-    let mut result_questions: Vec<m_ins::Category> = Vec::new();
-    let mut result_question_options: Vec<m_ins::DBOption> = Vec::new();
+    let mut result_questions: Vec<m_ins::NewCategory> = Vec::new();
+    let mut result_question_options: Vec<m_ins::NewChoice> = Vec::new();
 
     for question in toml_data.questions.iter() {
         // First, add the question to the db
         let category_type = question.question_type.unwrap_or(1);
 
-        let cat = m_ins::Category {
+        let cat = m_ins::NewCategory {
             label: question.label.clone(),
             prompt: question.prompt.clone(),
             category_type,
@@ -111,9 +111,10 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
         result_questions.push(cat);
 
         for qo in question.options.iter() {
-            let dbo = m_ins::DBOption {
+            let dbo = m_ins::NewChoice {
                 label: qo.label.clone(),
                 shortcut: qo.shortcut.clone(),
+                category_label: question.label.clone(),
             };
             result_question_options.push(dbo);
         }
