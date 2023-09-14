@@ -93,4 +93,3 @@ INSERT INTO "category_types" ("id", "label")
 		(3, "Rating Scale"),
 		(4, "Menu Tree"),
 		(5, "External Command");
-
