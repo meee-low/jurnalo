@@ -1,5 +1,6 @@
 [[questions]]
 id = 0
+label = "weather"
 prompt = "How is the weather today?"
 
   [[questions.options]]
@@ -16,6 +17,7 @@ prompt = "How is the weather today?"
 
 [[questions]]
 id = 1
+label = "mood"
 prompt = "How was your mood today?"
 
   [[questions.options]]
@@ -32,6 +34,7 @@ prompt = "How was your mood today?"
 
 [[questions]]
 id = 2
+label = "habits"
 prompt = "What habits did you accomplish today?"
 
   [[questions.options]]

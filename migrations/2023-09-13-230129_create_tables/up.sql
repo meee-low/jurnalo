@@ -1,7 +1,7 @@
 -- Your SQL goes here
 
 CREATE TABLE categories (
-	"id"	INTEGER,
+	"id"	INTEGER NOT NULL,
 	"label"	TEXT NOT NULL UNIQUE,
 	"prompt"	TEXT NOT NULL UNIQUE,
 	"category_type"	INTEGER NOT NULL DEFAULT 1,
@@ -11,11 +11,12 @@ CREATE TABLE categories (
 	FOREIGN KEY("category_type")
 		REFERENCES "category_types" ("id")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE NO ACTION,
+	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2)
 );
 
 CREATE TABLE "category_option" (
-	"id"	INTEGER,
+	"id"	INTEGER NOT NULL,
 	"category_id"	INTEGER NOT NULL,
 	"option_id"	INTEGER NOT NULL,
 	PRIMARY KEY("id")
@@ -30,7 +31,7 @@ CREATE TABLE "category_option" (
 );
 
 CREATE TABLE "entries" (
-	"id"	INTEGER,
+	"id"	INTEGER NOT NULL,
 	"timestamp"	TIMESTAMP NOT NULL,
 	"category"	INTEGER,
 	"value"	INTEGER,
@@ -47,28 +48,29 @@ CREATE TABLE "entries" (
 );
 
 CREATE TABLE "options" (
-	"id"	INTEGER,
-	"label"	TEXT NOT NULL UNIQUE,
-	"shortcut"	TEXT NOT NULL UNIQUE,
+	"id"	INTEGER NOT NULL,
+	"label"	TEXT NOT NULL,
+	"shortcut"	TEXT NOT NULL,
 	"disabled_bool" INTEGER NOT NULL DEFAULT 0,
-	PRIMARY KEY("id")
+	PRIMARY KEY("id"),
+	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2)
 );
 
 CREATE TABLE "category_types" (
-	"id" INTEGER,
+	"id"	INTEGER NOT NULL,
 	"label" TEXT NOT NULL UNIQUE,
 	PRIMARY KEY("id")
 );
 
 CREATE TABLE "batteries" (
-	"id" INTEGER,
+	"id"	INTEGER NOT NULL,
 	"label" TEXT NOT NULL UNIQUE,
 	"command" TEXT UNIQUE,
 	PRIMARY KEY("id")
 );
 
 CREATE TABLE "batteries_to_categories" (
-	"id" INTEGER,
+	"id"	INTEGER NOT NULL,
 	"battery_id" INTEGER NOT NULL,
 	"category_id" INTEGER NOT NULL,
 	PRIMARY KEY("id")

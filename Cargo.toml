@@ -13,7 +13,7 @@ json = "0.12.4"
 diesel = { version = "2.1.1", features = ["sqlite", "chrono"] }
 diesel_migrations= "2.1.0"
 chrono = "0.4.30"
-serde = "1.0.188"
+serde = { version = "1.0.188", features = ["rc"] }
 serde_derive = "1.0.188"
 toml = "0.8.0"
 dotenvy = "0.15"
