@@ -10,7 +10,16 @@ repository = "https://github.com/meee-low/jurnalo/"
 
 [dependencies]
 json = "0.12.4"
+diesel = { version = "2.1.1", features = ["sqlite", "chrono"] }
+diesel_migrations= "2.1.0"
+chrono = "0.4.30"
+# serde = "1.0.188"
+dotenvy = "0.15"
 
 [[bin]]
 name = "jurnalo"
 path = "src/main.rs"
+
+[[bin]]
+name = "backend"
+path = "src/backend.rs"
