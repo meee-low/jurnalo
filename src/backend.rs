@@ -38,15 +38,16 @@ fn is_database_empty(_connection: &mut SqliteConnection) -> bool {
     use diesel::result::Error as dError;
     use schema::entries::dsl::entries;
 
-    let count: i64 = match entries.count().first(_connection) {
-        Ok(v) => v,
+    match entries.count().first::<i64>(_connection) {
+        Ok(_) => false, // found *something*, so it's not empty
         Err(dError::DatabaseError(dErrorKind::Unknown, d)) => {
+            // This error is typically "table not found."
+            // TODO: Keep an watch on this, make sure it's actually always "table not found"
             dbg!("{}", d);
-            return true;
+            true
         }
         Err(e) => panic!("{}", e),
-    };
-    count == 0
+    }
 }
 
 fn create_basic_database(
