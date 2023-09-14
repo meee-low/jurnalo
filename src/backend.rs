@@ -55,8 +55,8 @@ fn create_basic_database(
     Ok(())
 }
 
-// Tables/Schema
-
-// Structs
 
 // APIs
+
+
+// Post new entry

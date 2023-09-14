@@ -9,6 +9,7 @@ pub struct Category {
     pub label: String,
     pub prompt: String,
     pub category_type: i32,
+    pub disabled_bool: i32,
 }
 
 #[derive(Queryable, Selectable)]
@@ -39,4 +40,5 @@ pub struct DBOption {
     pub id: i32,
     pub label: String,
     pub shortcut: String,
+    pub disabled_bool: i32,
 }
