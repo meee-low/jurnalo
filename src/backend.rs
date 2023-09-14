@@ -98,7 +98,7 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
     let mut result_questions: Vec<m_ins::NewCategory> = Vec::new();
     let mut result_question_options: Vec<m_ins::NewChoice> = Vec::new();
 
-    for question in toml_data.questions.iter() {
+    for question in toml_data.categories.iter() {
         // First, add the question to the db
         let category_type = question.question_type.unwrap_or(1);
 
@@ -110,7 +110,7 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
         };
         result_questions.push(cat);
 
-        for qo in question.options.iter() {
+        for qo in question.choices.iter() {
             let dbo = m_ins::NewChoice {
                 label: qo.label.clone(),
                 shortcut: qo.shortcut.clone(),

@@ -19,30 +19,30 @@ pub mod toml_schema {
 
     #[derive(Deserialize)]
     pub struct TomlData {
-        pub questions: Box<[Question]>,
-        pub batteries_of_questions: Box<[BatteryOfQuestionsConfig]>,
+        pub categories: Box<[Category]>,
+        pub quizzes: Box<[Quiz]>,
     }
 
     #[derive(Deserialize)]
-    pub struct Question {
+    pub struct Category {
         pub id: i32,
         pub label: String,
         pub prompt: String,
-        pub options: Box<[QuestionOption]>,
+        pub choices: Box<[Choice]>,
         pub question_type: Option<i32>,
         pub extra_info: Option<String>,
     }
 
     #[derive(Deserialize)]
-    pub struct QuestionOption {
+    pub struct Choice {
         pub shortcut: String,
         pub label: String,
     }
 
     #[derive(Deserialize)]
-    pub struct BatteryOfQuestionsConfig {
+    pub struct Quiz {
         pub command: String,
-        pub questions: Box<[i32]>,
+        pub categories: Box<[i32]>,
     }
 }
 
@@ -50,12 +50,12 @@ pub mod toml_schema {
 fn test_load_toml() {
     let toml_data = load_toml("").expect("Couldn't parse the test TOML.");
 
-    assert!(toml_data.questions.len() > 0);
+    assert!(toml_data.categories.len() > 0);
     assert_eq!(
-        toml_data.questions[2].prompt,
+        toml_data.categories[2].prompt,
         "What habits did you accomplish today?"
     );
-    assert_ne!(toml_data.questions[0].prompt, "How was your mood today?");
-    assert_eq!(toml_data.questions[2].options[0].shortcut, "M");
-    assert_eq!(toml_data.questions[1].question_type, None);
+    assert_ne!(toml_data.categories[0].prompt, "How was your mood today?");
+    assert_eq!(toml_data.categories[2].choices[0].shortcut, "M");
+    assert_eq!(toml_data.categories[1].question_type, None);
 }

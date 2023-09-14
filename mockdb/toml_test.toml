@@ -1,54 +1,54 @@
-[[questions]]
+[[categories]]
 id = 0
 label = "weather"
 prompt = "How is the weather today?"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "1"
   label = "Sunny"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "2"
   label = "Cloudy"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "3"
   label = "Rainy"
 
-[[questions]]
+[[categories]]
 id = 1
 label = "mood"
 prompt = "How was your mood today?"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "1"
   label = "Great!"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "2"
   label = "Meh..."
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "3"
   label = "Terrible!!"
 
-[[questions]]
+[[categories]]
 id = 2
 label = "habits"
 prompt = "What habits did you accomplish today?"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "M"
   label = "Meditation"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "R"
   label = "Reading"
 
-  [[questions.options]]
+  [[categories.choices]]
   shortcut = "G"
   label = "Gym"
 
-[[batteries_of_questions]]
+[[quizzes]]
 command = "full"
-questions = [ 1, 0, 2 ]
+categories = [ 1, 0, 2 ]
