@@ -91,7 +91,7 @@ fn populate_db_from_toml(connection: &mut SqliteConnection, toml_path: &str) {
 struct ObjectsToInsert {
     categories: Vec<m_ins::Category>,
     alternatives: Vec<m_ins::DBOption>,
-    categories_options: Option<Vec<m_ins::CategoryOption>>,
+    // categories_options: Option<Vec<m_ins::CategoryOption>>,
 }
 
 fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
@@ -122,6 +122,6 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
     ObjectsToInsert {
         categories: result_questions,
         alternatives: result_question_options,
-        categories_options: None,
+        // categories_options: None,
     }
 }
