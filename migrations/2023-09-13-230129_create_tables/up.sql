@@ -59,20 +59,20 @@ CREATE TABLE "quizzes" (
 	PRIMARY KEY("id")
 );
 
+-- many-to-many
 CREATE TABLE "quizzes_to_categories" (
-	-- many-to-many
 	"id"	INTEGER NOT NULL,
-	"quiz_id" INTEGER NOT NULL,
-	"category_id" INTEGER NOT NULL,
-	PRIMARY KEY("id")
-	FOREIGN KEY("quiz_id")
-		REFERENCES "quizzes" ("id")
+	"quiz_label" TEXT NOT NULL,
+	"category_label" TEXT NOT NULL,
+	PRIMARY KEY("id"),
+	FOREIGN KEY("quiz_label")
+		REFERENCES "quizzes" ("label")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION,
-	FOREIGN KEY("category_id")
-		REFERENCES "categories" ("id")
+		ON UPDATE CASCADE,
+	FOREIGN KEY("category_label")
+		REFERENCES "categories" ("label")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 );
 
 --- Now prepopulate with some basic configs.

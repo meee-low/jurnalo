@@ -16,8 +16,8 @@ pub mod queryable_or_selectable {
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct QuizToCategory {
         pub id: i32,
-        pub quiz_id: i32,
-        pub category_id: i32,
+        pub quiz_label: String,
+        pub category_label: String,
     }
 
     #[derive(Queryable, Selectable)]
@@ -77,8 +77,8 @@ pub mod insertable {
     #[diesel(table_name = crate::schema::quizzes_to_categories)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct NewQuizToCategory {
-        pub quiz_id: i32,
-        pub category_id: i32,
+        pub quiz_label: String,
+        pub category_label: String,
     }
 
     #[derive(Insertable)]
@@ -98,7 +98,7 @@ pub mod insertable {
         pub label: String,
     }
 
-    #[derive(Insertable)]
+    #[derive(Insertable, Debug)]
     #[diesel(table_name = crate::schema::entries)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct NewEntry {

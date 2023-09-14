@@ -49,16 +49,14 @@ diesel::table! {
 diesel::table! {
     quizzes_to_categories (id) {
         id -> Integer,
-        quiz_id -> Integer,
-        category_id -> Integer,
+        quiz_label -> Text,
+        category_label -> Text,
     }
 }
 
 diesel::joinable!(categories -> category_types (category_type));
 diesel::joinable!(entries -> categories (category));
 diesel::joinable!(entries -> choices (value));
-diesel::joinable!(quizzes_to_categories -> categories (category_id));
-diesel::joinable!(quizzes_to_categories -> quizzes (quiz_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     categories,
