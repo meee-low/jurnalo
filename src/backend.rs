@@ -32,13 +32,13 @@ pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
     }
 }
 
-fn is_database_empty(_connection: &mut SqliteConnection) -> bool {
+fn is_database_empty(connection: &mut SqliteConnection) -> bool {
     // TODO: get it to work with the actual database, not just check if the file exists.
     use diesel::result::DatabaseErrorKind as dErrorKind;
     use diesel::result::Error as dError;
     use schema::entries::dsl::entries;
 
-    match entries.count().first::<i64>(_connection) {
+    match entries.count().first::<i64>(connection) {
         Ok(_) => false, // found *something*, so it's not empty
         Err(dError::DatabaseError(dErrorKind::Unknown, d)) => {
             // This error is typically "table not found."
