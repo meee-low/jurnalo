@@ -1,5 +1,4 @@
 [[categories]]
-id = 0
 label = "weather"
 prompt = "How is the weather today?"
 
@@ -16,7 +15,6 @@ prompt = "How is the weather today?"
   label = "Rainy"
 
 [[categories]]
-id = 1
 label = "mood"
 prompt = "How was your mood today?"
 
@@ -33,7 +31,6 @@ prompt = "How was your mood today?"
   label = "Terrible!!"
 
 [[categories]]
-id = 2
 label = "habits"
 prompt = "What habits did you accomplish today?"
 
@@ -51,4 +48,4 @@ prompt = "What habits did you accomplish today?"
 
 [[quizzes]]
 command = "full"
-categories = [ 1, 0, 2 ]
+categories = [ "mood", "weather", "habits" ]

@@ -11,6 +11,7 @@ pub fn load_toml(path: &str) -> Result<TomlData, toml::de::Error> {
         path.to_owned()
     };
     let toml_string = std::fs::read_to_string(toml_path).expect("Could not read the toml file.");
+    // TODO: Validate TOML (make sure the foreign keys are valid (I think it's only on the quiz section).)
     toml::from_str::<TomlData>(&toml_string)
 }
 
@@ -25,7 +26,6 @@ pub mod toml_schema {
 
     #[derive(Deserialize)]
     pub struct Category {
-        pub id: i32,
         pub label: String,
         pub prompt: String,
         pub choices: Box<[Choice]>,
@@ -42,7 +42,7 @@ pub mod toml_schema {
     #[derive(Deserialize)]
     pub struct Quiz {
         pub command: String,
-        pub categories: Box<[i32]>,
+        pub categories: Box<[String]>,
     }
 }
 
