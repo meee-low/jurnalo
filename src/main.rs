@@ -82,9 +82,10 @@ fn add_note(note: String) -> Result<(), Error> {
     let new_entry = NewEntry {
         category: None,
         value: None,
-        details: Some(note),
+        details: Some(note.clone()),
     };
     api::insert_entry(new_entry)?;
+    println!("Success! Saved note:\n{}", note);
     Ok(())
 }
 
