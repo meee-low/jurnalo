@@ -6,8 +6,8 @@ use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::env;
 
-mod models;
-mod schema;
+use crate::models;
+pub mod schema;
 mod toml_utils;
 use toml_utils::{load_toml, toml_schema};
 
@@ -15,28 +15,41 @@ use models::insertable as m_ins;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 const STANDARD_TOML_PATH: &str = "mockdb/toml_test.toml";
+const PRAGMAS: [&str; 1] = ["PRAGMA foreign_keys = ON"];
 
-fn main() {
+pub fn setup() {
     // Setup
-    dotenvy::dotenv().ok();
-    let database_path: String = env::var("DATABASE_URL").expect("`DATABASE_URL` not set in .env");
-    let mut connection = SqliteConnection::establish(&database_path)
-        .unwrap_or_else(|_| panic!("Error connecting to {}", database_path));
+    let mut connection = establish_connection();
 
     // If database doesn't exist, create it based on the schema and populate the database with the starting values from the TOML
     create_database_if_it_doesnt_exist(&mut connection);
 }
 
-pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
-    if is_database_empty(connection) {
-        dbg!("Trying to create database from scratch.");
-        create_basic_database(connection).unwrap();
-        dbg!("Created database.");
-        println!("Running the basic config.");
-        populate_db_from_toml(connection, STANDARD_TOML_PATH);
-    } else {
-        dbg!("Database is not empty! Proceding...");
+pub fn establish_connection() -> SqliteConnection {
+    dotenvy::dotenv().ok();
+    let database_path: String = env::var("DATABASE_URL").expect("`DATABASE_URL` not set in .env");
+    let mut connection = SqliteConnection::establish(&database_path)
+        .unwrap_or_else(|_| panic!("Error connecting to {}", database_path));
+    for pragma in PRAGMAS {
+        // connection.execute(pragma);
+        diesel::sql_query(pragma)
+            .execute(&mut connection)
+            .unwrap_or_else(|_| panic!("Could not execute pragma `{}`", pragma));
     }
+    connection
+}
+
+pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
+    if !is_database_empty(connection) {
+        println!("Database is not empty! Proceding...");
+        return;
+    }
+    println!("Trying to create database from scratch.");
+    create_basic_database(connection).unwrap();
+    println!("Created database.");
+
+    println!("Running the basic config.");
+    populate_db_from_toml(connection, STANDARD_TOML_PATH);
 }
 
 fn is_database_empty(connection: &mut SqliteConnection) -> bool {
@@ -70,39 +83,61 @@ fn create_basic_database(
 
 fn populate_db_from_toml(connection: &mut SqliteConnection, toml_path: &str) {
     use schema::categories::dsl::*;
-    use schema::options::dsl::*;
+    use schema::choices::dsl::*;
+    use schema::quizzes::dsl::*;
+    use schema::quizzes_to_categories::dsl::*;
 
-    let toml_data = load_toml(toml_path).expect("Couldn't load the data to the TOML.");
+    let toml_data = match load_toml(toml_path) {
+        Ok(td) => td,
+        Err(_) => {
+            eprintln!("Couldn't load the data to the TOML.");
+            dbg!(toml_path);
+            panic!()
+        }
+    };
     let objects_to_insert = toml_to_db_query(&toml_data);
 
-    // Insert questions.
     diesel::insert_into(categories)
         .values(objects_to_insert.categories)
         .execute(connection)
         .expect("Failed to write to database.");
 
-    // Insert the choices for the questions.
-    diesel::insert_into(options)
+    diesel::insert_into(choices)
         .values(objects_to_insert.alternatives)
         .execute(connection)
         .expect("Failed to write to database.");
+
+    diesel::insert_into(quizzes)
+        .values(objects_to_insert.quizzes)
+        .execute(connection)
+        .expect("Failed to write quizzes to database.");
+
+    diesel::insert_into(quizzes_to_categories)
+        .values(objects_to_insert.quiz_to_cat)
+        .execute(connection)
+        .expect("Failed to write quiz_to_cat to database.");
+    // TODO: Handle foreign key errors, as these are user errors. ErrorType: `DatabaseError(ForeignKeyViolation, _)`
 }
 
-struct ObjectsToInsert {
-    categories: Vec<m_ins::Category>,
-    alternatives: Vec<m_ins::DBOption>,
-    // categories_options: Option<Vec<m_ins::CategoryOption>>,
+struct ObjectsToInsertFromSetup {
+    categories: Vec<m_ins::NewCategory>,
+    alternatives: Vec<m_ins::NewChoice>,
+    quizzes: Vec<m_ins::NewQuiz>,
+    quiz_to_cat: Vec<m_ins::NewQuizToCategory>,
 }
 
-fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
-    let mut result_questions: Vec<m_ins::Category> = Vec::new();
-    let mut result_question_options: Vec<m_ins::DBOption> = Vec::new();
+#[allow(clippy::needless_late_init)]
+fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSetup {
+    let mut result_questions: Vec<m_ins::NewCategory> = Vec::new();
+    let mut result_question_options: Vec<m_ins::NewChoice> = Vec::new();
+    let result_quizzes: Vec<m_ins::NewQuiz>;
+    let mut result_quiz_to_cat: Vec<m_ins::NewQuizToCategory> = Vec::new();
 
-    for question in toml_data.questions.iter() {
+    for question in toml_data.categories.iter() {
         // First, add the question to the db
         let category_type = question.question_type.unwrap_or(1);
 
-        let cat = m_ins::Category {
+        let cat = m_ins::NewCategory {
             label: question.label.clone(),
             prompt: question.prompt.clone(),
             category_type,
@@ -110,18 +145,127 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsert {
         };
         result_questions.push(cat);
 
-        for qo in question.options.iter() {
-            let dbo = m_ins::DBOption {
+        for qo in question.choices.iter() {
+            let dbo = m_ins::NewChoice {
                 label: qo.label.clone(),
                 shortcut: qo.shortcut.clone(),
+                category_label: question.label.clone(),
             };
             result_question_options.push(dbo);
         }
     }
 
-    ObjectsToInsert {
+    result_quizzes = toml_data
+        .quizzes
+        .iter()
+        .map(|q| m_ins::NewQuiz {
+            label: q.command.clone(),
+            command: Some(q.command.clone()),
+        })
+        .collect();
+
+    for quiz in toml_data.quizzes.iter() {
+        let quiz_label = quiz.command.clone();
+        for cat in quiz.categories.iter() {
+            result_quiz_to_cat.push(m_ins::NewQuizToCategory {
+                quiz_label: quiz_label.clone(),
+                category_label: cat.clone(),
+            })
+        }
+    }
+
+    ObjectsToInsertFromSetup {
         categories: result_questions,
         alternatives: result_question_options,
-        // categories_options: None,
+        quizzes: result_quizzes,
+        quiz_to_cat: result_quiz_to_cat,
+    }
+}
+
+pub mod api {
+    use crate::backend::establish_connection;
+    use crate::backend::schema;
+    use crate::models::{insertable as m_ins, queryable_or_selectable as m_qos};
+    use diesel::prelude::*;
+    use std::collections::BTreeMap;
+
+    pub fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
+        use schema::entries::dsl::*;
+
+        let mut connection = establish_connection();
+
+        diesel::insert_into(entries)
+            .values(&new_entry)
+            .execute(&mut connection)?;
+        Ok(())
+    }
+
+    // #[test]
+    // fn test_insert_entry() {
+    //     todo!()
+    // }
+
+    // pub fn get_categories_from_quiz_label(
+    //     quiz_label: &str,
+    // ) -> Result<Vec<m_qos::Category>, crate::errors::Error> {
+    //     use schema::{categories, quizzes, quizzes_to_categories};
+
+    //     use m_qos::Category;
+
+    //     let mut connection = establish_connection();
+
+    //     match quizzes::table
+    //         .filter(quizzes::label.eq(quiz_label))
+    //         .inner_join(
+    //             quizzes_to_categories::table
+    //                 .on(quizzes::label.eq(quizzes_to_categories::quiz_label)),
+    //         )
+    //         .inner_join(
+    //             categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
+    //         )
+    //         .select(categories::all_columns)
+    //         .load::<Category>(&mut connection)
+    //     {
+    //         Ok(vec_of_quizzes) => Ok(vec_of_quizzes),
+    //         Err(e) => Err(crate::errors::Error::DatabaseError(e)),
+    //     }
+    // }
+
+    pub fn get_categories_and_choices_from_quiz_label(
+        quiz_label: &str,
+    ) -> Result<BTreeMap<m_qos::Category, Option<Vec<m_qos::Choice>>>, crate::errors::Error> {
+        use schema::{categories, choices, quizzes, quizzes_to_categories};
+
+        let mut connection = establish_connection();
+
+        let results: Vec<(m_qos::Category, Option<m_qos::Choice>)> = quizzes::table
+            .inner_join(
+                quizzes_to_categories::table
+                    .on(quizzes_to_categories::quiz_label.eq(quiz_label.to_string())),
+            )
+            .inner_join(
+                categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
+            )
+            .left_outer_join(choices::table.on(categories::label.eq(choices::category_label)))
+            .order_by(choices::shortcut)
+            .select((categories::all_columns, choices::all_columns.nullable()))
+            .load::<(m_qos::Category, Option<m_qos::Choice>)>(&mut connection)
+            .expect("Error loading data");
+
+        let mut actual_results = BTreeMap::<m_qos::Category, Option<Vec<m_qos::Choice>>>::new();
+
+        for (cat, maybe_choice) in results {
+            if let Some(c) = maybe_choice {
+                if let Some(Some(cur_vec)) = actual_results.get(&cat) {
+                    let mut new_vec = cur_vec.clone();
+                    new_vec.push(c);
+                    actual_results.insert(cat, Some(new_vec));
+                } else {
+                    actual_results.insert(cat, Some(vec![c]));
+                }
+            }
+        }
+
+        Ok(actual_results)
     }
 }

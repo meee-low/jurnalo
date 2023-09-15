@@ -15,24 +15,9 @@ CREATE TABLE categories (
 	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2)
 );
 
-CREATE TABLE "category_option" (
-	"id"	INTEGER NOT NULL,
-	"category_id"	INTEGER NOT NULL,
-	"option_id"	INTEGER NOT NULL,
-	PRIMARY KEY("id")
-	FOREIGN KEY ("category_id")
-		REFERENCES "categories" ("id")
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION,
-	FOREIGN KEY ("option_id")
-		REFERENCES "options" ("id")
-		ON DELETE CASCADE
-		ON UPDATE NO ACTION
-);
-
 CREATE TABLE "entries" (
 	"id"	INTEGER NOT NULL,
-	"timestamp"	TIMESTAMP NOT NULL,
+	"timestamp"	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"category"	INTEGER,
 	"value"	INTEGER,
 	"details"	TEXT,
@@ -42,17 +27,22 @@ CREATE TABLE "entries" (
 		ON DELETE CASCADE
 		ON UPDATE NO ACTION,
 	FOREIGN KEY ("value")
-		REFERENCES "options" ("id")
+		REFERENCES "choices" ("id")
 		ON DELETE CASCADE
 		ON UPDATE NO ACTION
 );
 
-CREATE TABLE "options" (
+CREATE TABLE "choices" (
 	"id"	INTEGER NOT NULL,
 	"label"	TEXT NOT NULL,
 	"shortcut"	TEXT NOT NULL,
 	"disabled_bool" INTEGER NOT NULL DEFAULT 0,
+	"category_label" TEXT NOT NULL,
 	PRIMARY KEY("id"),
+	FOREIGN KEY ("category_label")
+		REFERENCES "categories" ("label")
+		ON DELETE CASCADE
+		ON UPDATE CASCADE,
 	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2)
 );
 
@@ -62,33 +52,34 @@ CREATE TABLE "category_types" (
 	PRIMARY KEY("id")
 );
 
-CREATE TABLE "batteries" (
+CREATE TABLE "quizzes" (
 	"id"	INTEGER NOT NULL,
 	"label" TEXT NOT NULL UNIQUE,
 	"command" TEXT UNIQUE,
 	PRIMARY KEY("id")
 );
 
-CREATE TABLE "batteries_to_categories" (
+-- many-to-many
+CREATE TABLE "quizzes_to_categories" (
 	"id"	INTEGER NOT NULL,
-	"battery_id" INTEGER NOT NULL,
-	"category_id" INTEGER NOT NULL,
-	PRIMARY KEY("id")
-	FOREIGN KEY("battery_id")
-		REFERENCES "batteries" ("id")
+	"quiz_label" TEXT NOT NULL,
+	"category_label" TEXT NOT NULL,
+	PRIMARY KEY("id"),
+	FOREIGN KEY("quiz_label")
+		REFERENCES "quizzes" ("label")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION,
-	FOREIGN KEY("category_id")
-		REFERENCES "categories" ("id")
+		ON UPDATE CASCADE,
+	FOREIGN KEY("category_label")
+		REFERENCES "categories" ("label")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE CASCADE
 );
 
 --- Now prepopulate with some basic configs.
 
 INSERT INTO "category_types" ("id", "label")
 	VALUES
-		(1, "Choices"),
+		(1, "Multiple Choices"),
 		(2, "Free Prompt"),
 		(3, "Rating Scale"),
 		(4, "Menu Tree"),
