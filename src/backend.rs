@@ -40,15 +40,16 @@ pub fn establish_connection() -> SqliteConnection {
 }
 
 pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
-    if is_database_empty(connection) {
-        dbg!("Trying to create database from scratch.");
-        create_basic_database(connection).unwrap();
-        dbg!("Created database.");
-        println!("Running the basic config.");
-        populate_db_from_toml(connection, STANDARD_TOML_PATH);
-    } else {
-        dbg!("Database is not empty! Proceding...");
+    if !is_database_empty(connection) {
+        println!("Database is not empty! Proceding...");
+        return;
     }
+    println!("Trying to create database from scratch.");
+    create_basic_database(connection).unwrap();
+    println!("Created database.");
+
+    println!("Running the basic config.");
+    populate_db_from_toml(connection, STANDARD_TOML_PATH);
 }
 
 fn is_database_empty(connection: &mut SqliteConnection) -> bool {
