@@ -4,7 +4,6 @@ pub enum Error {
     JSONParsing(JSONParsingError),
     CLIParsing(ParsingCommandError),
 }
-// TODO: Make these a single kind of error.
 #[derive(Debug)]
 pub enum ParsingCommandError {
     TooFewArguments,
@@ -17,6 +16,8 @@ pub enum JSONParsingError {
     // EmptyValue,
     UnexpectedTypeForKey(String),
 }
+
+// Implementations:
 
 impl From<std::io::Error> for Error {
     fn from(value: std::io::Error) -> Self {
