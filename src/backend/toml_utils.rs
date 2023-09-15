@@ -11,7 +11,8 @@ pub fn load_toml(path_string: &str) -> Result<TomlData, toml::de::Error> {
     let maybe_test_toml = std::env::var("TEST_TOML");
 
     if path_string.is_empty() {
-        test_toml_path_string = maybe_test_toml.expect("Could not find `TEST_TOML` in the environment.");
+        test_toml_path_string =
+            maybe_test_toml.expect("Could not find `TEST_TOML` in the environment.");
     }
     let toml_path = Path::new(test_toml_path_string.as_str());
 

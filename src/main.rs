@@ -1,18 +1,13 @@
 use std::env;
 
-use json::JsonValue;
-
 mod backend;
 mod errors;
-mod json_utils;
 mod models;
 
 use backend::api;
 use errors::{Error, ParsingCommandError};
-use json_utils::*;
 
 // const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
-const MOCK_SETTINGS_PATH: &str = "mockdb/settings.json";
 
 fn main() -> Result<(), Error> {
     backend::setup();
@@ -40,7 +35,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     // TODO: Idea: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     match command {
-        C::Full => full_battery(content),
+        C::Full => quiz_full(content),
         C::QuickNote => parse_note(content),
         C::Habit => {
             todo!()
@@ -65,18 +60,10 @@ fn parse_note(content: &[String]) -> Result<(), Error> {
     }
 }
 
-// fn add_note(note: String) -> std::io::Result<()> {
-//     // Currently just a dummy implementation for testing.
-//     // TODO: Needs to be connected to database.
-//     let mut file = File::options()
-//         .append(true)
-//         .create(true)
-//         .open(MOCK_LOG_PATH)?;
-//     writeln!(&mut file, "{}", note)?;
-//     Ok(())
-// }
-
 fn add_note(note: String) -> Result<(), Error> {
+    if note.is_empty() {
+        todo!();
+    }
     use models::insertable::NewEntry;
 
     let new_entry = NewEntry {
@@ -89,56 +76,46 @@ fn add_note(note: String) -> Result<(), Error> {
     Ok(())
 }
 
-fn full_battery(content: &[String]) -> Result<(), Error> {
-    // TODO: Idea: Maybe allow for variants of this? Probe the database for the keyword.
-    // E.g.: jurnalo full day, jurnalo full week, jurnalo full social, ...
-    // Then it's probably a good idea to just have the command itself (jurnalo day, jurnalo week, ...)
-    // For now, complaining when there are extra words.
+fn get_user_input() -> String {
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => input,
+        Err(_) => {
+            panic!("Couldn't handle user input.")
+        }
+    }
+}
+
+fn quiz_full(content: &[String]) -> Result<(), Error> {
     if !content.is_empty() {
         return Err(ParsingCommandError::TooManyArguments.into());
     }
 
-    let settings_raw =
-        std::fs::read_to_string(MOCK_SETTINGS_PATH).expect("Couldn't open the settings JSON.");
-    let settings = json::parse(&settings_raw).expect("Couldn't parse the JSON for questions.");
+    let mut inputs = Vec::<String>::new();
 
-    let questions: &Vec<JsonValue> = get_key_from_object_as_vec(&settings, "questions")?;
-    let mut inputs: Vec<String> = Vec::new();
+    let categories_and_choices = backend::api::get_categories_and_choices_from_quiz_label("full")?;
 
-    for question in questions.iter() {
-        let prompt: &str = get_key_from_object_as_str(question, "prompt")?;
-        let options: &Vec<JsonValue> = get_key_from_object_as_vec(question, "options")?;
-
-        let mut shortcut_label_pairs: Vec<(&str, &str)> = Vec::new();
-        for option in options.iter() {
-            let shortcut = get_key_from_object_as_str(option, "shortcut")?;
-            let label = get_key_from_object_as_str(option, "label")?;
-            shortcut_label_pairs.push((shortcut, label));
-        }
-
-        println!("{}", prompt);
-        println!(
-            "{}",
-            shortcut_label_pairs
-                .iter()
-                .map(|(s, l)| format!("[{}] {}", s, l))
-                .collect::<Vec<String>>()
-                .join(" ")
-        );
-
-        let mut input = String::new();
-        match std::io::stdin().read_line(&mut input) {
-            Ok(_) => {
-                input = input.trim().to_string();
+    for (cat, choices) in categories_and_choices.iter() {
+        println!("{}", cat.prompt);
+        match choices {
+            Some(choices) => {
+                println!(
+                    "{}",
+                    choices
+                        .iter()
+                        .map(|c| format!("[{}] {}", c.shortcut, c.label))
+                        .collect::<Vec<String>>()
+                        .join(" ")
+                );
             }
-            Err(_) => {
-                panic!("Couldn't handle user input.")
-            }
+            None => {}
         }
+        let input = get_user_input();
         inputs.push(input.trim().to_owned());
+        // TODO: Process the input (match with the choices, make it into a NewEntry)
     }
-    println!("Your answers were: {}", inputs.join(" | "));
-    // post_full_entry(serialize_entry(inputs))
+
+    println!("{}", inputs.join(" | "));
     Ok(())
 }
 
