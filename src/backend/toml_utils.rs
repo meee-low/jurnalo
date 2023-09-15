@@ -1,16 +1,24 @@
 extern crate dotenvy;
 extern crate toml;
 
+use std::path::Path;
+
 use toml_schema::TomlData;
 
-pub fn load_toml(path: &str) -> Result<TomlData, toml::de::Error> {
-    let toml_path = if path.is_empty() {
-        dotenvy::dotenv().ok();
-        std::env::var("TEST_TOML").expect("Could not find `TEST_TOML` in the environment.")
-    } else {
-        path.to_owned()
-    };
-    let toml_string = std::fs::read_to_string(toml_path).expect("Could not read the toml file.");
+pub fn load_toml(path_string: &str) -> Result<TomlData, toml::de::Error> {
+    let mut test_toml_path_string = path_string.to_owned();
+    dotenvy::dotenv().ok();
+    let maybe_test_toml = std::env::var("TEST_TOML");
+
+    if path_string.is_empty() {
+        test_toml_path_string = maybe_test_toml.expect("Could not find `TEST_TOML` in the environment.");
+    }
+    let toml_path = Path::new(test_toml_path_string.as_str());
+
+    let toml_string = std::fs::read_to_string(toml_path).unwrap_or(format!(
+        "Could not read the toml file at path: {:#?}.",
+        toml_path
+    ));
     // TODO: Validate TOML (make sure the foreign keys are valid (I think it's only on the quiz section).)
     toml::from_str::<TomlData>(&toml_string)
 }

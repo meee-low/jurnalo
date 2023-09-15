@@ -1,19 +1,22 @@
 use std::env;
-use std::fs::File;
-use std::io::Write;
 
 use json::JsonValue;
 
+mod backend;
 mod errors;
 mod json_utils;
+mod models;
 
+use backend::api;
 use errors::{Error, ParsingCommandError};
 use json_utils::*;
 
-const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
+// const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
 const MOCK_SETTINGS_PATH: &str = "mockdb/settings.json";
 
 fn main() -> Result<(), Error> {
+    backend::setup();
+
     let args: Vec<String> = env::args().collect();
     match args.len() {
         1 => {
@@ -58,18 +61,30 @@ fn parse_note(content: &[String]) -> Result<(), Error> {
     }
     match add_note(message) {
         Ok(_) => Ok(()),
-        Err(e) => Err(e.into()),
+        Err(e) => Err(e),
     }
 }
 
-fn add_note(note: String) -> std::io::Result<()> {
-    // Currently just a dummy implementation for testing.
-    // TODO: Needs to be connected to database.
-    let mut file = File::options()
-        .append(true)
-        .create(true)
-        .open(MOCK_LOG_PATH)?;
-    writeln!(&mut file, "{}", note)?;
+// fn add_note(note: String) -> std::io::Result<()> {
+//     // Currently just a dummy implementation for testing.
+//     // TODO: Needs to be connected to database.
+//     let mut file = File::options()
+//         .append(true)
+//         .create(true)
+//         .open(MOCK_LOG_PATH)?;
+//     writeln!(&mut file, "{}", note)?;
+//     Ok(())
+// }
+
+fn add_note(note: String) -> Result<(), Error> {
+    use models::insertable::NewEntry;
+
+    let new_entry = NewEntry {
+        category: None,
+        value: None,
+        details: Some(note),
+    };
+    api::insert_entry(new_entry)?;
     Ok(())
 }
 

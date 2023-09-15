@@ -1,8 +1,11 @@
+use diesel::result::Error as DieselError;
+
 #[derive(Debug)]
 pub enum Error {
     IO(std::io::Error),
     JSONParsing(JSONParsingError),
     CLIParsing(ParsingCommandError),
+    DatabaseError(DieselError),
 }
 #[derive(Debug)]
 pub enum ParsingCommandError {
@@ -34,5 +37,11 @@ impl From<JSONParsingError> for Error {
 impl From<ParsingCommandError> for Error {
     fn from(value: ParsingCommandError) -> Self {
         Self::CLIParsing(value)
+    }
+}
+
+impl From<DieselError> for Error {
+    fn from(value: DieselError) -> Self {
+        Self::DatabaseError(value)
     }
 }

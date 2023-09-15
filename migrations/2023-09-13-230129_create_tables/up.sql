@@ -17,7 +17,7 @@ CREATE TABLE categories (
 
 CREATE TABLE "entries" (
 	"id"	INTEGER NOT NULL,
-	"timestamp"	TIMESTAMP NOT NULL,
+	"timestamp"	TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	"category"	INTEGER,
 	"value"	INTEGER,
 	"details"	TEXT,

@@ -6,8 +6,8 @@ use diesel::sqlite::SqliteConnection;
 use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 use std::env;
 
-mod models;
-mod schema;
+use crate::models;
+pub mod schema;
 mod toml_utils;
 use toml_utils::{load_toml, toml_schema};
 
@@ -17,7 +17,7 @@ const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 const STANDARD_TOML_PATH: &str = "mockdb/toml_test.toml";
 const PRAGMAS: [&str; 1] = ["PRAGMA foreign_keys = ON"];
 
-fn main() {
+pub fn setup() {
     // Setup
     let mut connection = establish_connection();
 
@@ -86,7 +86,14 @@ fn populate_db_from_toml(connection: &mut SqliteConnection, toml_path: &str) {
     use schema::quizzes::dsl::*;
     use schema::quizzes_to_categories::dsl::*;
 
-    let toml_data = load_toml(toml_path).expect("Couldn't load the data to the TOML.");
+    let toml_data = match load_toml(toml_path) {
+        Ok(td) => td,
+        Err(_) => {
+            eprintln!("Couldn't load the data to the TOML.");
+            dbg!(toml_path);
+            panic!()
+        }
+    };
     let objects_to_insert = toml_to_db_query(&toml_data);
 
     diesel::insert_into(categories)
@@ -171,6 +178,33 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
         alternatives: result_question_options,
         quizzes: result_quizzes,
         quiz_to_cat: result_quiz_to_cat,
-        // categories_options: None,
     }
+}
+
+pub mod api {
+    use crate::backend::establish_connection;
+    use crate::models;
+    use diesel::prelude::*;
+
+    pub fn insert_entry(
+        new_entry: models::insertable::NewEntry,
+    ) -> Result<(), diesel::result::Error> {
+        use crate::backend::schema::entries::dsl::*;
+
+        let mut connection = establish_connection();
+
+        diesel::insert_into(entries)
+            .values(&new_entry)
+            .execute(&mut connection)?;
+        Ok(())
+    }
+
+    // #[test]
+    // fn test_insert_entry() {
+    //     todo!()
+    // }
+
+    // pub fn get_categories_from_quiz(quiz: models::queryable_or_selectable::Quiz) {
+    //     todo!()
+    // }
 }
