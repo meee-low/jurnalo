@@ -64,14 +64,7 @@ fn add_note(note: String) -> Result<(), Error> {
     if note.is_empty() {
         todo!();
     }
-    use models::insertable::NewEntry;
-
-    let new_entry = NewEntry {
-        category: None,
-        value: None,
-        details: Some(note.clone()),
-    };
-    api::insert_entry(new_entry)?;
+    api::post_entry(None, None, Some(note.clone()))?;
     println!("Success! Saved note:\n{}", note);
     Ok(())
 }
@@ -91,7 +84,8 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
         return Err(ParsingCommandError::TooManyArguments.into());
     }
 
-    let mut inputs = Vec::<String>::new();
+    let mut inputs = Vec::new();
+    let mut entries: Vec<(Option<i32>, Option<i32>, Option<String>)> = Vec::new();
 
     let categories_and_choices = backend::api::get_categories_and_choices_from_quiz_label("full")?;
 
@@ -110,22 +104,60 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
             }
             None => {}
         }
-        let input = get_user_input();
-        inputs.push(input.trim().to_owned());
-        // TODO: Process the input (match with the choices, make it into a NewEntry)
+        let input = get_user_input().trim().to_owned();
+        inputs.push(input.clone());
+        let mut shortcuts: Vec<(i32, String)> = Vec::new();
+        for choice in choices.clone().unwrap_or(vec![]) {
+            shortcuts.push((choice.id, choice.shortcut.clone()));
+        }
+        let parsed_input = parse_shortcuts(input, shortcuts);
+        for (choice_id, detail) in parsed_input {
+            entries.push((Some(cat.id), choice_id, detail));
+        }
     }
 
     println!("{}", inputs.join(" | "));
+    backend::api::post_multiple_entries(entries).expect("Faied to add to the database.");
     Ok(())
 }
 
-// fn serialize_entry(entry: ()) {
-//     todo!()
-// }
+fn parse_shortcuts(
+    user_input: String,
+    shortcuts: Vec<(i32, String)>,
+) -> Vec<(Option<i32>, Option<String>)> {
+    // Get all the shortcuts that match the category label.
+    // Walk through the string and find the matches.
 
-// fn post_full_entry(entry: ()) {
-//     todo!()
-// }
+    let split_input: Vec<&str> = user_input.split(':').collect();
+
+    let mut result: Vec<(Option<i32>, Option<String>)> = Vec::new();
+
+    // TODO: Triple for-loop, could maybe be optimized.
+    for (i, input) in split_input.iter().enumerate() {
+        if i == 0 {
+            // parse it into smaller chunks according to the result
+            let maybe_shortcuts: Vec<&str> = input.split(' ').collect();
+            let mut found = false;
+            for mb in maybe_shortcuts.iter() {
+                for (id, s) in shortcuts.iter() {
+                    if s.to_lowercase() == mb.to_lowercase().trim() {
+                        result.push((Some(*id), None));
+                        found = true;
+                    }
+                }
+                if !found {
+                    // TODO: Doesn't currently work.
+                    result.push((None, Some((*mb).to_owned())));
+                }
+            }
+        } else {
+            result.push((None, Some(input.to_string())));
+        }
+    }
+
+    // TODO: ignore the ones that are (None, None)
+    result
+}
 
 enum Command {
     Full,

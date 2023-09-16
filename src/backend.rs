@@ -189,7 +189,7 @@ pub mod api {
     use diesel::prelude::*;
     use std::collections::BTreeMap;
 
-    pub fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
+    fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
         use schema::entries::dsl::*;
 
         let mut connection = establish_connection();
@@ -267,5 +267,41 @@ pub mod api {
         }
 
         Ok(actual_results)
+    }
+
+    pub fn post_entry(
+        category: Option<i32>,
+        value: Option<i32>,
+        details: Option<String>,
+    ) -> Result<(), diesel::result::Error> {
+        let new_entry = m_ins::NewEntry {
+            category,
+            value,
+            details,
+        };
+
+        insert_entry(new_entry)
+    }
+
+    pub fn post_multiple_entries(
+        entries: Vec<(Option<i32>, Option<i32>, Option<String>)>,
+    ) -> Result<(), diesel::result::Error> {
+        use schema::entries;
+        let new_entries_obj: Vec<m_ins::NewEntry> = entries
+            .iter()
+            .map(|(cat_id, choice_id, comment)| m_ins::NewEntry {
+                category: *cat_id,
+                value: *choice_id,
+                details: comment.clone(),
+            })
+            .collect();
+
+        let mut connection = establish_connection();
+
+        diesel::insert_into(entries::dsl::entries)
+            .values(new_entries_obj)
+            .execute(&mut connection)?;
+
+        Ok(())
     }
 }
