@@ -29,7 +29,8 @@ CREATE TABLE "entries" (
 	FOREIGN KEY ("value")
 		REFERENCES "choices" ("id")
 		ON DELETE CASCADE
-		ON UPDATE NO ACTION
+		ON UPDATE NO ACTION,
+	CHECK ("value" IS NOT NULL OR "details" IS NOT NULL)
 );
 
 CREATE TABLE "choices" (
