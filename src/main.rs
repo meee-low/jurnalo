@@ -175,19 +175,19 @@ fn printable_entries(
 
     let mut answer = String::new();
 
-    for result in results.iter() {
+    for (entry, category_label, choice_label) in results.iter() {
         let mut tmp = String::new();
 
-        tmp.push_str(format!("{}: ", result.timestamp).as_str());
+        tmp.push_str(format!("{}: ", entry.timestamp).as_str());
 
-        if let Some(cat) = result.category {
-            tmp.push_str(format!("{}", cat).as_str());
-            if let Some(choice) = result.value {
+        if let Some(cat) = category_label {
+            tmp.push_str(cat);
+            if let Some(choice) = choice_label {
                 tmp.push_str(format!(" -> {}", choice).as_str());
             }
         }
-        if let Some(ref details) = result.details {
-            if result.category.is_some() {
+        if let Some(ref details) = entry.details {
+            if entry.category.is_some() {
                 tmp.push_str(" : ");
             }
             tmp.push_str(details);
