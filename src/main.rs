@@ -41,6 +41,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
             todo!()
         }
         C::Print => {
+            // TODO: clean this up
             let printable = printable_entries(
                 chrono::Utc::now().naive_utc(),
                 chrono::Utc::now()
@@ -171,6 +172,8 @@ fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
 ) -> Result<String, crate::errors::Error> {
+    // TODO: get the labels, not just the ids.
+
     let results = backend::api::get_entries_between_dates(starting_date, end_date)?;
 
     let mut answer = String::new();
