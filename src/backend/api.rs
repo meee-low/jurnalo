@@ -84,6 +84,30 @@ pub fn get_categories_and_choices_from_quiz_label(
     Ok(actual_results)
 }
 
+pub fn get_entries_between_dates(
+    starting_date: chrono::NaiveDateTime,
+    end_date: chrono::NaiveDateTime,
+) -> Result<Vec<m_qos::Entry>, diesel::result::Error> {
+    // TODO: review: maybe convert directly from a date instead of a datetime.
+
+    use schema::entries;
+
+    let sd = starting_date;
+    let ed = end_date;
+
+    let mut connection = establish_connection();
+
+    let results: Vec<m_qos::Entry> = entries::table
+        .filter(entries::timestamp.le(sd))
+        .filter(entries::timestamp.ge(ed))
+        .order(entries::timestamp)
+        .select(entries::all_columns)
+        .load::<m_qos::Entry>(&mut connection)
+        .expect("Error loading entries between the dates.");
+
+    Ok(results)
+}
+
 pub fn post_entry(
     category: Option<i32>,
     value: Option<i32>,

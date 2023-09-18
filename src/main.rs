@@ -41,7 +41,15 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
             todo!()
         }
         C::Print => {
-            todo!()
+            let printable = printable_entries(
+                chrono::Utc::now().naive_utc(),
+                chrono::Utc::now()
+                    .checked_sub_days(chrono::Days::new(7))
+                    .expect("Couldn't subtract days?")
+                    .naive_utc(),
+            )?;
+            println!("{}", printable);
+            Ok(())
         }
         C::Export => {
             todo!()
@@ -157,6 +165,39 @@ fn parse_shortcuts(
 
     // TODO: ignore the ones that are (None, None)
     result
+}
+
+fn printable_entries(
+    starting_date: chrono::NaiveDateTime,
+    end_date: chrono::NaiveDateTime,
+) -> Result<String, crate::errors::Error> {
+    let results = backend::api::get_entries_between_dates(starting_date, end_date)?;
+
+    let mut answer = String::new();
+
+    for result in results.iter() {
+        let mut tmp = String::new();
+
+        tmp.push_str(format!("{}: ", result.timestamp).as_str());
+
+        if let Some(cat) = result.category {
+            tmp.push_str(format!("{}", cat).as_str());
+            if let Some(choice) = result.value {
+                tmp.push_str(format!(" -> {}", choice).as_str());
+            }
+        }
+        if let Some(ref details) = result.details {
+            if result.category.is_some() {
+                tmp.push_str(" : ");
+            }
+            tmp.push_str(details);
+        }
+
+        answer.push_str(tmp.as_str());
+        answer.push('\n');
+    }
+
+    Ok(answer.trim().to_owned())
 }
 
 enum Command {
