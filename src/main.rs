@@ -144,7 +144,7 @@ fn parse_shortcuts(
             // parse it into smaller chunks according to the result
             let maybe_shortcuts: Vec<&str> = input.split(' ').collect();
             let mut found = false;
-            for mb in maybe_shortcuts.iter() {
+            for mb in maybe_shortcuts {
                 for (id, s) in shortcuts.iter() {
                     if s.to_lowercase() == mb.to_lowercase().trim() {
                         result.push((Some(*id), None));
