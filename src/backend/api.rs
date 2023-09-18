@@ -62,7 +62,7 @@ pub fn get_categories_and_choices_from_quiz_label(
             categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
         )
         .left_outer_join(choices::table.on(categories::label.eq(choices::category_label)))
-        .order_by(choices::shortcut)
+        .order((quizzes_to_categories::order, choices::shortcut)) // TODO: BUG: this doesn't actually sort by the order, only by the shortcut.
         .select((categories::all_columns, choices::all_columns.nullable()))
         .load::<(m_qos::Category, Option<m_qos::Choice>)>(&mut connection)
         .expect("Error loading data");

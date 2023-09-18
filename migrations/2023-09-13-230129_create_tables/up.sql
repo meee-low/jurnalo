@@ -65,6 +65,7 @@ CREATE TABLE "quizzes_to_categories" (
 	"id"	INTEGER NOT NULL,
 	"quiz_label" TEXT NOT NULL,
 	"category_label" TEXT NOT NULL,
+	"order" INTEGER NOT NULL,
 	PRIMARY KEY("id"),
 	FOREIGN KEY("quiz_label")
 		REFERENCES "quizzes" ("label")

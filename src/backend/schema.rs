@@ -51,6 +51,7 @@ diesel::table! {
         id -> Integer,
         quiz_label -> Text,
         category_label -> Text,
+        order -> Integer,
     }
 }
 

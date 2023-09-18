@@ -167,10 +167,11 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
 
     for quiz in toml_data.quizzes.iter() {
         let quiz_label = quiz.command.clone();
-        for cat in quiz.categories.iter() {
+        for (i, cat) in quiz.categories.iter().enumerate() {
             result_quiz_to_cat.push(m_ins::NewQuizToCategory {
                 quiz_label: quiz_label.clone(),
                 category_label: cat.clone(),
+                order: i.try_into().expect("Couldn't convert from usize to i32 in the toml setup."),
             })
         }
     }
