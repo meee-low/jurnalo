@@ -171,7 +171,9 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
             result_quiz_to_cat.push(m_ins::NewQuizToCategory {
                 quiz_label: quiz_label.clone(),
                 category_label: cat.clone(),
-                order: i.try_into().expect("Couldn't convert from usize to i32 in the toml setup."),
+                order: i
+                    .try_into()
+                    .expect("Couldn't convert from usize to i32 in the toml setup."),
             })
         }
     }
