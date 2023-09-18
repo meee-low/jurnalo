@@ -87,25 +87,32 @@ pub fn get_categories_and_choices_from_quiz_label(
 pub fn get_entries_between_dates(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
-) -> Result<Vec<(m_qos::Entry, Option<String>, Option<String>)>, diesel::result::Error> {
+) -> Result<Vec<EntryWithLabelsTuple>, diesel::result::Error> {
     // TODO: review: maybe convert directly from a date instead of a datetime.
 
-    use schema::{entries, categories, choices};
+    use schema::{categories, choices, entries};
 
     let sd = starting_date;
     let ed = end_date;
 
     let mut connection = establish_connection();
 
-    let results: Vec<(m_qos::Entry, Option<String>, Option<String>)> = entries::table
+    let results: Vec<EntryWithLabelsTuple> = entries::table
         .filter(entries::timestamp.le(sd))
         .filter(entries::timestamp.ge(ed))
         .inner_join(categories::table)
         .inner_join(choices::table)
         .order(entries::timestamp)
-        .select((entries::all_columns, categories::label.nullable(), choices::label.nullable()))
-        .load::<(m_qos::Entry, Option<String>, Option<String>)>(&mut connection)
-        .expect("Error loading entries between the dates.");
+        .select((
+            entries::all_columns,
+            categories::label.nullable(),
+            choices::label.nullable(),
+        ))
+        .load::<EntryCatLabelChoiceLabel>(&mut connection)
+        .expect("Error loading entries between the dates.")
+        .iter()
+        .map(|(ent, cat, cho)| EntryWithLabelsTuple((*ent).clone(), cat.clone(), cho.clone()))
+        .collect();
 
     Ok(results)
 }
@@ -145,3 +152,8 @@ pub fn post_multiple_entries(
 
     Ok(())
 }
+
+// type-aliases
+
+type EntryCatLabelChoiceLabel = (m_qos::Entry, Option<String>, Option<String>);
+pub struct EntryWithLabelsTuple(pub m_qos::Entry, pub Option<String>, pub Option<String>);

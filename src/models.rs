@@ -40,7 +40,7 @@ pub mod queryable_or_selectable {
     //     pub label: String,
     // }
 
-    #[derive(Queryable, Selectable, Debug)]
+    #[derive(Queryable, Selectable, Debug, Clone)]
     #[diesel(table_name = crate::backend::schema::entries)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct Entry {

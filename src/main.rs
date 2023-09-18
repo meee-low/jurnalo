@@ -175,7 +175,7 @@ fn printable_entries(
 
     let mut answer = String::new();
 
-    for (entry, category_label, choice_label) in results.iter() {
+    for api::EntryWithLabelsTuple(entry, category_label, choice_label) in results.iter() {
         let mut tmp = String::new();
 
         tmp.push_str(format!("{}: ", entry.timestamp).as_str());
