@@ -40,7 +40,7 @@ pub mod queryable_or_selectable {
     //     pub label: String,
     // }
 
-    #[derive(Queryable, Selectable)]
+    #[derive(Queryable, Selectable, Debug)]
     #[diesel(table_name = crate::backend::schema::entries)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct Entry {
@@ -80,6 +80,7 @@ pub mod insertable {
     pub struct NewQuizToCategory {
         pub quiz_label: String,
         pub category_label: String,
+        pub order: i32,
     }
 
     #[derive(Insertable)]
