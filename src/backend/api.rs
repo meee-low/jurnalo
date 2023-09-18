@@ -4,6 +4,10 @@ use crate::models::{insertable as m_ins, queryable_or_selectable as m_qos};
 use diesel::prelude::*;
 use std::collections::BTreeMap;
 
+
+// TODO: IDEA: maybe have functions return `queries`, so they can be more modular (e.g. apply a filter on the results of a query from another function)
+// However, this is more abstraction, so only do it when it's actually necessary to refactor.
+
 fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
     use schema::entries::dsl::*;
 
