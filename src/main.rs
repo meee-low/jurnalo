@@ -100,19 +100,16 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
 
     for (cat, choices) in categories_and_choices.iter() {
         println!("{}", cat.prompt);
-        match choices {
-            Some(choices) => {
-                println!(
-                    "{}",
-                    choices
-                        .iter()
-                        .map(|c| format!("[{}] {}", c.shortcut, c.label))
-                        .collect::<Vec<String>>()
-                        .join(" ")
-                );
-            }
-            None => {}
+        if let Some(cs) = choices {
+            println!(
+                "{}",
+                cs.iter()
+                    .map(|c| format!("[{}] {}", c.shortcut, c.label))
+                    .collect::<Vec<String>>()
+                    .join(" ")
+            );
         }
+
         let input = get_user_input().trim().to_owned();
         inputs.push(input.clone());
         let mut shortcuts: Vec<(i32, String)> = Vec::new();
