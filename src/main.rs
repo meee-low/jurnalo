@@ -139,7 +139,7 @@ fn parse_shortcuts(
     let mut result: Vec<(Option<i32>, Option<String>)> = Vec::new();
 
     // TODO: Triple for-loop, could maybe be optimized.
-    for (i, input) in split_input.iter().enumerate() {
+    for (i, &input) in split_input.iter().enumerate() {
         if i == 0 {
             // parse it into smaller chunks according to the result
             let maybe_shortcuts: Vec<&str> = input.split(' ').collect();
