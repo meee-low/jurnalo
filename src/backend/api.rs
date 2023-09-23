@@ -4,7 +4,6 @@ use crate::models::{insertable as m_ins, queryable_or_selectable as m_qos};
 use diesel::prelude::*;
 use std::collections::BTreeMap;
 
-
 // TODO: IDEA: maybe have functions return `queries`, so they can be more modular (e.g. apply a filter on the results of a query from another function)
 // However, this is more abstraction, so only do it when it's actually necessary to refactor.
 
@@ -82,6 +81,8 @@ pub fn get_categories_and_choices_from_quiz_label(
             } else {
                 actual_results.insert(cat, Some(vec![c]));
             }
+        } else {
+            actual_results.insert(cat, None);
         }
     }
 
