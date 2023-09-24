@@ -113,13 +113,21 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
 
         let input = get_user_input().trim().to_owned();
         inputs.push(input.clone());
-        let mut shortcuts: Vec<(i32, String)> = Vec::new();
-        for choice in choices.clone().unwrap_or(vec![]) {
-            shortcuts.push((choice.id, choice.shortcut.clone()));
-        }
-        let parsed_input = extract_shortcuts_from_input(input, shortcuts);
-        for (choice_id, detail) in parsed_input {
-            entries.push((Some(cat.id), choice_id, detail));
+
+        let shortcuts: Vec<(i32, String)> = choices
+            .clone()
+            .unwrap_or(vec![])
+            .iter()
+            .map(|choice| (choice.id, choice.shortcut.clone()))
+            .collect();
+
+        let (parsed_choices, parsed_detail) = extract_shortcuts_from_input(input, shortcuts);
+        if let Some(cs) = parsed_choices {
+            for choice_id in cs {
+                entries.push((Some(cat.id), Some(choice_id), parsed_detail.clone()));
+            }
+        } else if parsed_detail.is_some() {
+            entries.push((Some(cat.id), None, parsed_detail));
         }
     }
 
@@ -131,38 +139,61 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
 fn extract_shortcuts_from_input(
     user_input: String,
     shortcuts: Vec<(i32, String)>,
-) -> Vec<(Option<i32>, Option<String>)> {
-    // Get all the shortcuts that match the category label.
-    // Walk through the string and find the matches.
+) -> (Option<Vec<i32>>, Option<String>) {
+    if user_input.is_empty() {
+        return (None, None);
+    }
 
-    let split_input: Vec<&str> = user_input.split(':').collect();
+    let split_input: Vec<&str> = user_input.split(':').map(|s| s.trim()).collect();
 
-    let mut result: Vec<(Option<i32>, Option<String>)> = Vec::new();
-
-    // TODO: Triple for-loop, could maybe be optimized.
-    for (i, &input) in split_input.iter().enumerate() {
-        if i == 0 {
-            // parse it into smaller chunks according to the result
-            let maybe_shortcuts: Vec<&str> = input.split(' ').collect();
-            let mut found = false;
-            for mb in maybe_shortcuts {
-                for (id, s) in shortcuts.iter() {
-                    if s.to_lowercase() == mb.to_lowercase().trim() {
-                        result.push((Some(*id), None));
-                        found = true;
-                    }
-                }
-                if !found {
-                    // TODO: Doesn't currently work.
-                    result.push((None, Some((*mb).to_owned())));
-                }
-            }
-        } else {
-            result.push((None, Some(input.to_string())));
+    let mut parsed_details: Vec<String> = Vec::new();
+    if split_input.len() > 1 {
+        let details = split_input[1..].join(" : ");
+        if !details.is_empty() {
+            // prevent empty strings
+            parsed_details.push(details);
         }
     }
 
-    // TODO: ignore the ones that are (None, None)
+    let shortcut_section = split_input[0];
+    let mut parsed_shortcuts = Vec::<i32>::new();
+    let mut unknowns_in_shortcut_area = Vec::<String>::new();
+
+    for possible_shortcut in shortcut_section
+        .split(' ')
+        .map(|s| s.to_lowercase().trim().to_owned())
+    {
+        if possible_shortcut.is_empty() {
+            // Nothing to see here...
+            continue;
+        }
+        let mut found = false;
+        for (id, s) in shortcuts.iter() {
+            if possible_shortcut == s.to_lowercase() {
+                parsed_shortcuts.push(*id);
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            // just add as a text detail, I guess.
+            unknowns_in_shortcut_area.push(possible_shortcut);
+        }
+    }
+
+    if !unknowns_in_shortcut_area.is_empty() {
+        parsed_details.push(unknowns_in_shortcut_area.join(" "));
+    }
+
+    let mut result: (Option<Vec<i32>>, Option<String>) = (None, None);
+
+    if !parsed_shortcuts.is_empty() {
+        result.0 = Some(parsed_shortcuts);
+    }
+    if !parsed_details.is_empty() {
+        result.1 = Some(parsed_details.join("; "));
+    }
+
     result
 }
 
