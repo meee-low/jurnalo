@@ -4,6 +4,9 @@ use crate::models::{insertable as m_ins, queryable_or_selectable as m_qos};
 use diesel::prelude::*;
 use std::collections::BTreeMap;
 
+// TODO: IDEA: maybe have functions return `queries`, so they can be more modular (e.g. apply a filter on the results of a query from another function)
+// However, this is more abstraction, so only do it when it's actually necessary to refactor.
+
 fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
     use schema::entries::dsl::*;
 
@@ -78,6 +81,8 @@ pub fn get_categories_and_choices_from_quiz_label(
             } else {
                 actual_results.insert(cat, Some(vec![c]));
             }
+        } else {
+            actual_results.insert(cat, None);
         }
     }
 
@@ -87,23 +92,32 @@ pub fn get_categories_and_choices_from_quiz_label(
 pub fn get_entries_between_dates(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
-) -> Result<Vec<m_qos::Entry>, diesel::result::Error> {
+) -> Result<Vec<EntryWithLabelsTuple>, diesel::result::Error> {
     // TODO: review: maybe convert directly from a date instead of a datetime.
 
-    use schema::entries;
+    use schema::{categories, choices, entries};
 
     let sd = starting_date;
     let ed = end_date;
 
     let mut connection = establish_connection();
 
-    let results: Vec<m_qos::Entry> = entries::table
+    let results: Vec<EntryWithLabelsTuple> = entries::table
         .filter(entries::timestamp.le(sd))
         .filter(entries::timestamp.ge(ed))
+        .inner_join(categories::table)
+        .left_outer_join(choices::table)
         .order(entries::timestamp)
-        .select(entries::all_columns)
-        .load::<m_qos::Entry>(&mut connection)
-        .expect("Error loading entries between the dates.");
+        .select((
+            entries::all_columns,
+            categories::label.nullable(),
+            choices::label.nullable(),
+        ))
+        .load::<EntryCatLabelChoiceLabel>(&mut connection)
+        .expect("Error loading entries between the dates.")
+        .iter()
+        .map(|(ent, cat, cho)| EntryWithLabelsTuple((*ent).clone(), cat.clone(), cho.clone()))
+        .collect();
 
     Ok(results)
 }
@@ -143,3 +157,8 @@ pub fn post_multiple_entries(
 
     Ok(())
 }
+
+// type-aliases
+
+type EntryCatLabelChoiceLabel = (m_qos::Entry, Option<String>, Option<String>);
+pub struct EntryWithLabelsTuple(pub m_qos::Entry, pub Option<String>, pub Option<String>);

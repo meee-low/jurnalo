@@ -1,4 +1,6 @@
 use diesel::result::Error as DieselError;
+// use thiserror::Error;
+// todo: implement trait thiserror::Error
 
 #[derive(Debug)]
 pub enum Error {

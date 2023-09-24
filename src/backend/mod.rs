@@ -15,7 +15,7 @@ use toml_utils::{load_toml, toml_schema};
 use models::insertable as m_ins;
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
-const STANDARD_TOML_PATH: &str = "mockdb/toml_test.toml";
+// const STANDARD_TOML_PATH: &str = "mockdb/toml_test.toml";
 const PRAGMAS: [&str; 1] = ["PRAGMA foreign_keys = ON"];
 
 pub fn setup() {
@@ -50,7 +50,9 @@ pub fn create_database_if_it_doesnt_exist(connection: &mut SqliteConnection) {
     println!("Created database.");
 
     println!("Running the basic config.");
-    populate_db_from_toml(connection, STANDARD_TOML_PATH);
+    dotenvy::dotenv().ok();
+    let toml_path = env::var("TEST_TOML").expect("`TEST_TOML` not set in .env");
+    populate_db_from_toml(connection, &toml_path);
 }
 
 fn is_database_empty(connection: &mut SqliteConnection) -> bool {
@@ -146,14 +148,27 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
         };
         result_questions.push(cat);
 
-        for qo in question.choices.iter() {
-            let dbo = m_ins::NewChoice {
-                label: qo.label.clone(),
-                shortcut: qo.shortcut.clone(),
-                category_label: question.label.clone(),
-            };
-            result_question_options.push(dbo);
+        match &question.choices {
+            None => {}
+            Some(choices) => {
+                for choice in choices.iter() {
+                    result_question_options.push(m_ins::NewChoice {
+                        label: choice.label.clone(),
+                        shortcut: choice.shortcut.clone(),
+                        category_label: question.label.clone(),
+                    })
+                }
+            }
         }
+
+        // for qo in question.choices.iter() {
+        //     let dbo = m_ins::NewChoice {
+        //         label: qo.label.clone(),
+        //         shortcut: qo.shortcut.clone(),
+        //         category_label: question.label.clone(),
+        //     };
+        //     result_question_options.push(dbo);
+        // }
     }
 
     result_quizzes = toml_data

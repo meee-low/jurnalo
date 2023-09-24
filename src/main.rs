@@ -1,10 +1,11 @@
+use itertools::Itertools;
 use std::env;
 
 mod backend;
 mod errors;
 mod models;
 
-use backend::api;
+use backend::api::{self, EntryWithLabelsTuple};
 use errors::{Error, ParsingCommandError};
 
 // const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
@@ -112,56 +113,87 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
 
         let input = get_user_input().trim().to_owned();
         inputs.push(input.clone());
-        let mut shortcuts: Vec<(i32, String)> = Vec::new();
-        for choice in choices.clone().unwrap_or(vec![]) {
-            shortcuts.push((choice.id, choice.shortcut.clone()));
-        }
-        let parsed_input = parse_shortcuts(input, shortcuts);
-        for (choice_id, detail) in parsed_input {
-            entries.push((Some(cat.id), choice_id, detail));
+
+        let shortcuts: Vec<(i32, String)> = choices
+            .clone()
+            .unwrap_or(vec![])
+            .iter()
+            .map(|choice| (choice.id, choice.shortcut.clone()))
+            .collect();
+
+        let (parsed_choices, parsed_detail) = extract_shortcuts_from_input(input, shortcuts);
+        if let Some(cs) = parsed_choices {
+            for choice_id in cs {
+                entries.push((Some(cat.id), Some(choice_id), parsed_detail.clone()));
+            }
+        } else if parsed_detail.is_some() {
+            entries.push((Some(cat.id), None, parsed_detail));
         }
     }
 
     println!("{}", inputs.join(" | "));
-    backend::api::post_multiple_entries(entries).expect("Faied to add to the database.");
+    backend::api::post_multiple_entries(entries).expect("Failed to add to the database.");
     Ok(())
 }
 
-fn parse_shortcuts(
+fn extract_shortcuts_from_input(
     user_input: String,
     shortcuts: Vec<(i32, String)>,
-) -> Vec<(Option<i32>, Option<String>)> {
-    // Get all the shortcuts that match the category label.
-    // Walk through the string and find the matches.
+) -> (Option<Vec<i32>>, Option<String>) {
+    if user_input.is_empty() {
+        return (None, None);
+    }
 
-    let split_input: Vec<&str> = user_input.split(':').collect();
+    let split_input: Vec<&str> = user_input.split(':').map(|s| s.trim()).collect();
 
-    let mut result: Vec<(Option<i32>, Option<String>)> = Vec::new();
-
-    // TODO: Triple for-loop, could maybe be optimized.
-    for (i, input) in split_input.iter().enumerate() {
-        if i == 0 {
-            // parse it into smaller chunks according to the result
-            let maybe_shortcuts: Vec<&str> = input.split(' ').collect();
-            let mut found = false;
-            for mb in maybe_shortcuts.iter() {
-                for (id, s) in shortcuts.iter() {
-                    if s.to_lowercase() == mb.to_lowercase().trim() {
-                        result.push((Some(*id), None));
-                        found = true;
-                    }
-                }
-                if !found {
-                    // TODO: Doesn't currently work.
-                    result.push((None, Some((*mb).to_owned())));
-                }
-            }
-        } else {
-            result.push((None, Some(input.to_string())));
+    let mut parsed_details: Vec<String> = Vec::new();
+    if split_input.len() > 1 {
+        let details = split_input[1..].join(" : ");
+        if !details.is_empty() {
+            // prevent empty strings
+            parsed_details.push(details);
         }
     }
 
-    // TODO: ignore the ones that are (None, None)
+    let shortcut_section = split_input[0];
+    let mut parsed_shortcuts = Vec::<i32>::new();
+    let mut unknowns_in_shortcut_area = Vec::<String>::new();
+
+    for possible_shortcut in shortcut_section
+        .split(' ')
+        .map(|s| s.to_lowercase().trim().to_owned())
+    {
+        if possible_shortcut.is_empty() {
+            // Nothing to see here...
+            continue;
+        }
+        let mut found = false;
+        for (id, s) in shortcuts.iter() {
+            if possible_shortcut == s.to_lowercase() {
+                parsed_shortcuts.push(*id);
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            // just add as a text detail, I guess.
+            unknowns_in_shortcut_area.push(possible_shortcut);
+        }
+    }
+
+    if !unknowns_in_shortcut_area.is_empty() {
+        parsed_details.push(unknowns_in_shortcut_area.join(" "));
+    }
+
+    let mut result: (Option<Vec<i32>>, Option<String>) = (None, None);
+
+    if !parsed_shortcuts.is_empty() {
+        result.0 = Some(parsed_shortcuts);
+    }
+    if !parsed_details.is_empty() {
+        result.1 = Some(parsed_details.join("; "));
+    }
+
     result
 }
 
@@ -169,37 +201,43 @@ fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
 ) -> Result<String, crate::errors::Error> {
-    // TODO: get the labels, not just the ids.
-
-    let results = backend::api::get_entries_between_dates(starting_date, end_date)?;
+    let response = backend::api::get_entries_between_dates(starting_date, end_date)?;
 
     let mut answer = String::new();
 
-    for result in results.iter() {
-        let mut tmp = String::new();
+    for (date, group) in &response
+        .into_iter()
+        .group_by(|api::EntryWithLabelsTuple(e, _, _)| e.timestamp.date())
+    {
+        let mut tmp_str = String::new();
 
-        tmp.push_str(format!("{}: ", result.timestamp).as_str());
+        tmp_str.push_str(format!("## {}\n", &date.to_string()).as_str());
 
-        if let Some(cat) = result.category {
-            tmp.push_str(format!("{}", cat).as_str());
-            if let Some(choice) = result.value {
-                tmp.push_str(format!(" -> {}", choice).as_str());
+        for (time, group) in &group.group_by(|EntryWithLabelsTuple(e, _, _)| e.timestamp.time()) {
+            tmp_str.push_str(format!("### {}\n", time).as_str());
+            for api::EntryWithLabelsTuple(entry, category_label, choice_label) in group {
+                if let Some(cat) = category_label {
+                    tmp_str.push_str(&cat);
+                    if let Some(choice) = choice_label {
+                        tmp_str.push_str(format!(" -> {}", choice).as_str());
+                    }
+                }
+                if let Some(ref details) = entry.details {
+                    if entry.category.is_some() {
+                        tmp_str.push_str(" : ");
+                    }
+                    tmp_str.push_str(details);
+                }
+                tmp_str.push_str("  \n");
             }
         }
-        if let Some(ref details) = result.details {
-            if result.category.is_some() {
-                tmp.push_str(" : ");
-            }
-            tmp.push_str(details);
-        }
-
-        answer.push_str(tmp.as_str());
+        answer.push_str(&tmp_str);
+        answer.push('\n');
         answer.push('\n');
     }
 
     Ok(answer.trim().to_owned())
 }
-
 enum Command {
     Full,
     QuickNote,
