@@ -106,7 +106,7 @@ pub fn get_entries_between_dates(
         .filter(entries::timestamp.le(sd))
         .filter(entries::timestamp.ge(ed))
         .inner_join(categories::table)
-        .inner_join(choices::table)
+        .left_outer_join(choices::table)
         .order(entries::timestamp)
         .select((
             entries::all_columns,

@@ -1,10 +1,11 @@
+use itertools::Itertools;
 use std::env;
 
 mod backend;
 mod errors;
 mod models;
 
-use backend::api;
+use backend::api::{self, EntryWithLabelsTuple};
 use errors::{Error, ParsingCommandError};
 
 // const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
@@ -116,18 +117,18 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
         for choice in choices.clone().unwrap_or(vec![]) {
             shortcuts.push((choice.id, choice.shortcut.clone()));
         }
-        let parsed_input = parse_shortcuts(input, shortcuts);
+        let parsed_input = extract_shortcuts_from_input(input, shortcuts);
         for (choice_id, detail) in parsed_input {
             entries.push((Some(cat.id), choice_id, detail));
         }
     }
 
     println!("{}", inputs.join(" | "));
-    backend::api::post_multiple_entries(entries).expect("Faied to add to the database.");
+    backend::api::post_multiple_entries(entries).expect("Failed to add to the database.");
     Ok(())
 }
 
-fn parse_shortcuts(
+fn extract_shortcuts_from_input(
     user_input: String,
     shortcuts: Vec<(i32, String)>,
 ) -> Vec<(Option<i32>, Option<String>)> {
@@ -169,37 +170,43 @@ fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
 ) -> Result<String, crate::errors::Error> {
-    // TODO: get the labels, not just the ids.
-
-    let results = backend::api::get_entries_between_dates(starting_date, end_date)?;
+    let response = backend::api::get_entries_between_dates(starting_date, end_date)?;
 
     let mut answer = String::new();
 
-    for api::EntryWithLabelsTuple(entry, category_label, choice_label) in results.iter() {
-        let mut tmp = String::new();
+    for (date, group) in &response
+        .into_iter()
+        .group_by(|api::EntryWithLabelsTuple(e, _, _)| e.timestamp.date())
+    {
+        let mut tmp_str = String::new();
 
-        tmp.push_str(format!("{}: ", entry.timestamp).as_str());
+        tmp_str.push_str(format!("## {}\n", &date.to_string()).as_str());
 
-        if let Some(cat) = category_label {
-            tmp.push_str(cat);
-            if let Some(choice) = choice_label {
-                tmp.push_str(format!(" -> {}", choice).as_str());
+        for (time, group) in &group.group_by(|EntryWithLabelsTuple(e, _, _)| e.timestamp.time()) {
+            tmp_str.push_str(format!("### {}\n", time).as_str());
+            for api::EntryWithLabelsTuple(entry, category_label, choice_label) in group {
+                if let Some(cat) = category_label {
+                    tmp_str.push_str(&cat);
+                    if let Some(choice) = choice_label {
+                        tmp_str.push_str(format!(" -> {}", choice).as_str());
+                    }
+                }
+                if let Some(ref details) = entry.details {
+                    if entry.category.is_some() {
+                        tmp_str.push_str(" : ");
+                    }
+                    tmp_str.push_str(details);
+                }
+                tmp_str.push_str("  \n");
             }
         }
-        if let Some(ref details) = entry.details {
-            if entry.category.is_some() {
-                tmp.push_str(" : ");
-            }
-            tmp.push_str(details);
-        }
-
-        answer.push_str(tmp.as_str());
+        answer.push_str(&tmp_str);
+        answer.push('\n');
         answer.push('\n');
     }
 
     Ok(answer.trim().to_owned())
 }
-
 enum Command {
     Full,
     QuickNote,
