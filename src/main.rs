@@ -35,7 +35,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     // that may take multiple commands (e.g.: `jurnalo habit add)
     use Command as C;
     let command = Command::from_string(command_string).expect("Command not recognized.");
-    // TODO: Idea: have the Command take in the content and parse it.
+    // IDEA: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     match command {
         C::Full => quiz_full(content),
