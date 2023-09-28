@@ -30,6 +30,7 @@ pub mod queryable_or_selectable {
         pub category_type: i32,
         pub disabled_bool: i32,
         pub extra_info: Option<String>,
+        pub show_in_streaks: i32,
     }
 
     // #[derive(Queryable, Selectable)]
@@ -60,6 +61,7 @@ pub mod queryable_or_selectable {
         pub shortcut: String,
         pub disabled_bool: i32,
         pub category_label: String,
+        pub show_in_streaks: i32,
     }
 }
 
@@ -91,6 +93,7 @@ pub mod insertable {
         pub prompt: String,
         pub category_type: i32,
         pub extra_info: Option<String>,
+        pub show_in_streaks: Option<i32>,
     }
 
     // #[derive(Insertable)]
@@ -116,5 +119,6 @@ pub mod insertable {
         pub label: String,
         pub shortcut: String,
         pub category_label: String,
+        pub show_in_streaks: Option<i32>,
     }
 }

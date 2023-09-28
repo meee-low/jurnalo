@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::collections::HashMap;
 use std::env;
 
 mod backend;
@@ -9,6 +10,7 @@ use backend::api::{self, EntryWithLabelsTuple};
 use errors::{Error, ParsingCommandError};
 
 // const MOCK_LOG_PATH: &str = "mockdb/logs.txt";
+const STREAK_RANGE: usize = 7; // the last 7 days are used for streaks.
 
 fn main() -> Result<(), Error> {
     backend::setup();
@@ -33,7 +35,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     // that may take multiple commands (e.g.: `jurnalo habit add)
     use Command as C;
     let command = Command::from_string(command_string).expect("Command not recognized.");
-    // TODO: Idea: have the Command take in the content and parse it.
+    // IDEA: have the Command take in the content and parse it.
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     match command {
         C::Full => quiz_full(content),
@@ -133,6 +135,11 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
 
     println!("{}", inputs.join(" | "));
     backend::api::post_multiple_entries(entries).expect("Failed to add to the database.");
+
+    // Print streaks table.
+    if let Some(streaks_table) = format_streaks_into_table(fetch_and_process_streaks()) {
+        println!("{}", streaks_table);
+    }
     Ok(())
 }
 
@@ -238,6 +245,102 @@ fn printable_entries(
 
     Ok(answer.trim().to_owned())
 }
+
+fn fetch_and_process_streaks() -> HashMap<String, [bool; STREAK_RANGE]> {
+    use chrono::prelude::*;
+    use chrono::Duration;
+
+    let today = Local::now().naive_utc();
+    let last_seven_days = (0..STREAK_RANGE)
+        .map(|offset| (today - Duration::days(offset as i64)).date())
+        .collect::<Vec<NaiveDate>>();
+
+    // Initialize the labels and booleans per day
+    let mut labels_and_bools: HashMap<String, [bool; STREAK_RANGE]> = HashMap::new();
+
+    let response = backend::api::get_timestamps_for_streaks_of_choices().unwrap();
+
+    for (label, timestamp) in response {
+        match timestamp {
+            Some(ts) => {
+                if last_seven_days.contains(&ts.date()) {
+                    // Calculate the day index (0 for today, 6 for 6 days ago)
+                    // IDEA: Currently uses difference from the current time. It could be good to use
+                    let day_index = (today - ts).num_days() as usize;
+                    // Update the boolean array for the label and day
+                    let bool_array = labels_and_bools
+                        .entry(label.clone())
+                        .or_insert([false; STREAK_RANGE]);
+                    if day_index <= bool_array.len() {
+                        bool_array[day_index] = true;
+                    } else {
+                        log::warn!("This should only be dealing with entries/timestamps within the streak range.")
+                    }
+                }
+            }
+            None => {
+                labels_and_bools
+                    .entry(label.clone())
+                    .or_insert([false; STREAK_RANGE]);
+            }
+        }
+    }
+    labels_and_bools
+}
+
+fn format_streaks_into_table(
+    labels_and_bools: HashMap<String, [bool; STREAK_RANGE]>,
+) -> Option<String> {
+    if labels_and_bools.is_empty() {
+        return None;
+    }
+
+    // let days = ["6", "5", "4", "3", "2", "1", "0"];
+    let days = (0..STREAK_RANGE)
+        .rev()
+        .map(|n| format!("{}", n))
+        .collect::<Vec<_>>();
+
+    debug_assert!(
+        days.iter().all(|d| d.len() == 1),
+        "The current formatting expects 1-character columns for days."
+    );
+
+    let mut table = String::new();
+
+    // First column padding
+    let padding_length = labels_and_bools
+        .keys()
+        .map(|l| l.len())
+        .max()
+        .expect("This shouldn't happen because at this point we should always have at least one item in the hashmap.")
+        + 2;
+
+    // First column padding for the first row
+    for _ in 0..padding_length {
+        table += " ";
+    }
+    for day in days {
+        table += &day;
+        table += " ";
+    }
+    table += "\n";
+
+    for (label, bool_array) in labels_and_bools.iter() {
+        table += &format!("{:<padding_length$}", label);
+
+        table += &bool_array
+            .iter()
+            .rev()
+            .map(|b| if *b { "# " } else { "  " })
+            .collect::<Vec<_>>()
+            .concat();
+        table += "\n";
+    }
+
+    Some(table)
+}
+
 enum Command {
     Full,
     QuickNote,
