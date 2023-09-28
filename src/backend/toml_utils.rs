@@ -41,6 +41,7 @@ pub mod toml_schema {
         pub question_type: Option<i32>,
         pub extra_info: Option<String>,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     #[derive(Deserialize)]
@@ -48,6 +49,7 @@ pub mod toml_schema {
         pub shortcut: String,
         pub label: String,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     #[derive(Deserialize)]

@@ -31,6 +31,7 @@ pub mod queryable_or_selectable {
         pub disabled_bool: i32,
         pub extra_info: Option<String>,
         pub show_in_streaks: i32,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     // #[derive(Queryable, Selectable)]
@@ -62,6 +63,7 @@ pub mod queryable_or_selectable {
         pub disabled_bool: i32,
         pub category_label: String,
         pub show_in_streaks: i32,
+        pub reminder_timer_in_days: Option<i32>,
     }
 }
 
@@ -94,6 +96,7 @@ pub mod insertable {
         pub category_type: i32,
         pub extra_info: Option<String>,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     // #[derive(Insertable)]
@@ -120,5 +123,6 @@ pub mod insertable {
         pub shortcut: String,
         pub category_label: String,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 }
