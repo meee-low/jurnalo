@@ -204,6 +204,7 @@ dependencies = [
  "diesel_migrations",
  "dotenvy",
  "itertools",
+ "log",
  "serde",
  "serde_derive",
  "thiserror",
