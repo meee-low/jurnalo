@@ -67,7 +67,7 @@ pub fn get_categories_and_choices_from_quiz_label(
         .left_outer_join(choices::table.on(categories::label.eq(choices::category_label)))
         .order((quizzes_to_categories::order, choices::shortcut)) // TODO: BUG: this doesn't actually sort by the order, only by the shortcut.
         .select((categories::all_columns, choices::all_columns.nullable()))
-        .load::<(m_qos::Category, Option<m_qos::Choice>)>(&mut connection)
+        .load::<_>(&mut connection)
         .expect("Error loading data");
 
     let mut actual_results = BTreeMap::<m_qos::Category, Option<Vec<m_qos::Choice>>>::new();
@@ -157,6 +157,75 @@ pub fn post_multiple_entries(
 
     Ok(())
 }
+
+// pub fn get_timestamps_for_categories(
+// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
+//     use schema::{categories, entries};
+
+//     let mut connection = establish_connection();
+
+//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
+//         .left_join(entries::table)
+//         .select((categories::label, entries::timestamp.nullable()))
+//         .load::<_>(&mut connection)
+//         .expect("Couldn't load data");
+
+//     Ok(results)
+// }
+
+// pub fn get_latest_timestamp_for_categories(
+// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
+//     use schema::{categories, entries};
+
+//     let mut connection = establish_connection();
+
+//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
+//         .left_join(entries::table)
+//         .group_by(categories::id)
+//         .select((
+//             categories::label,
+//             diesel::dsl::max(entries::timestamp).nullable(),
+//         ))
+//         .load::<_>(&mut connection)
+//         .expect("Couldn't load data");
+
+//     Ok(results)
+// }
+
+pub fn get_timestamps_for_streaks_of_choices(
+) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
+    use schema::{choices, entries};
+
+    let mut connection = establish_connection();
+
+    let results: Vec<(String, Option<chrono::NaiveDateTime>)> = choices::table
+        .filter(choices::show_in_streaks.eq(1))
+        .left_join(entries::table)
+        .select((choices::label, entries::timestamp.nullable()))
+        .load::<_>(&mut connection)
+        .expect("Couldn't load data");
+
+    Ok(results)
+}
+
+// pub fn get_latest_timestamp_for_choices(
+// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
+//     use schema::{choices, entries};
+
+//     let mut connection = establish_connection();
+
+//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = choices::table
+//         .left_join(entries::table)
+//         .group_by(choices::id)
+//         .select((
+//             choices::label,
+//             diesel::dsl::max(entries::timestamp).nullable(),
+//         ))
+//         .load::<_>(&mut connection)
+//         .expect("Couldn't load data");
+
+//     Ok(results)
+// }
 
 // type-aliases
 
