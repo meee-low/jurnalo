@@ -8,6 +8,7 @@ diesel::table! {
         category_type -> Integer,
         disabled_bool -> Integer,
         extra_info -> Nullable<Text>,
+        show_in_streaks -> Integer,
     }
 }
 
@@ -25,6 +26,7 @@ diesel::table! {
         shortcut -> Text,
         disabled_bool -> Integer,
         category_label -> Text,
+        show_in_streaks -> Integer,
     }
 }
 

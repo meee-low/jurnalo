@@ -21,6 +21,7 @@ prompt = "How was your mood today?"
   [[categories.choices]]
   shortcut = "1"
   label = "Great!"
+  show_in_streaks = 1
 
   [[categories.choices]]
   shortcut = "2"
@@ -37,14 +38,17 @@ prompt = "What habits did you accomplish today?"
   [[categories.choices]]
   shortcut = "M"
   label = "Meditation"
+  show_in_streaks = 1
 
   [[categories.choices]]
   shortcut = "R"
   label = "Reading"
+  show_in_streaks = 1
 
   [[categories.choices]]
   shortcut = "G"
   label = "Gym"
+  show_in_streaks = 1
 
 [[quizzes]]
 command = "full"

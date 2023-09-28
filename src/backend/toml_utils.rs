@@ -40,12 +40,14 @@ pub mod toml_schema {
         pub choices: Option<Box<[Choice]>>,
         pub question_type: Option<i32>,
         pub extra_info: Option<String>,
+        pub show_in_streaks: Option<i32>,
     }
 
     #[derive(Deserialize)]
     pub struct Choice {
         pub shortcut: String,
         pub label: String,
+        pub show_in_streaks: Option<i32>,
     }
 
     #[derive(Deserialize)]
