@@ -39,16 +39,19 @@ prompt = "What habits did you accomplish today?"
   shortcut = "M"
   label = "Meditation"
   show_in_streaks = 1
+  reminder_timer_in_days = 1
 
   [[categories.choices]]
   shortcut = "R"
   label = "Reading"
   show_in_streaks = 1
+  reminder_timer_in_days = 1
 
   [[categories.choices]]
   shortcut = "G"
   label = "Gym"
   show_in_streaks = 1
+  reminder_timer_in_days = 2
 
 [[quizzes]]
 command = "full"

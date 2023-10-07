@@ -9,6 +9,7 @@ diesel::table! {
         disabled_bool -> Integer,
         extra_info -> Nullable<Text>,
         show_in_streaks -> Integer,
+        reminder_timer_in_days -> Nullable<Integer>,
     }
 }
 
@@ -27,6 +28,7 @@ diesel::table! {
         disabled_bool -> Integer,
         category_label -> Text,
         show_in_streaks -> Integer,
+        reminder_timer_in_days -> Nullable<Integer>,
     }
 }
 

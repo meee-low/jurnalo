@@ -146,6 +146,7 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
             category_type,
             extra_info: question.extra_info.clone(),
             show_in_streaks: question.show_in_streaks,
+            reminder_timer_in_days: question.reminder_timer_in_days,
         };
         result_questions.push(cat);
 
@@ -158,6 +159,7 @@ fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSet
                         shortcut: choice.shortcut.clone(),
                         category_label: question.label.clone(),
                         show_in_streaks: choice.show_in_streaks,
+                        reminder_timer_in_days: choice.reminder_timer_in_days,
                     })
                 }
             }

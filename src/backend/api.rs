@@ -208,6 +208,23 @@ pub fn get_timestamps_for_streaks_of_choices(
     Ok(results)
 }
 
+pub fn get_latest_timestamp_for_choice(
+    choice_id: i32,
+) -> Result<Option<chrono::NaiveDateTime>, diesel::result::Error> {
+    use schema::{choices, entries};
+
+    let mut connection = establish_connection();
+
+    let result: Option<chrono::NaiveDateTime> = choices::table
+        .filter(choices::id.eq(choice_id))
+        .left_join(entries::table)
+        .select(diesel::dsl::max(entries::timestamp).nullable())
+        .first(&mut connection)
+        .expect("Couldn't load data");
+
+    Ok(result)
+}
+
 // pub fn get_latest_timestamp_for_choices(
 // ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
 //     use schema::{choices, entries};

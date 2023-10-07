@@ -5,6 +5,8 @@ use std::path::Path;
 
 use toml_schema::TomlData;
 
+// TODO: auto-generate shortcuts if none are provided.
+
 pub fn load_toml(path_string: &str) -> Result<TomlData, toml::de::Error> {
     let mut test_toml_path_string = path_string.to_owned();
     dotenvy::dotenv().ok();
@@ -41,6 +43,7 @@ pub mod toml_schema {
         pub question_type: Option<i32>,
         pub extra_info: Option<String>,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     #[derive(Deserialize)]
@@ -48,6 +51,7 @@ pub mod toml_schema {
         pub shortcut: String,
         pub label: String,
         pub show_in_streaks: Option<i32>,
+        pub reminder_timer_in_days: Option<i32>,
     }
 
     #[derive(Deserialize)]

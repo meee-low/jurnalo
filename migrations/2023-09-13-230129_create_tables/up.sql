@@ -8,7 +8,7 @@ CREATE TABLE categories (
 	"disabled_bool" INTEGER NOT NULL DEFAULT 0,
 	"extra_info" TEXT,
 	"show_in_streaks" INTEGER NOT NULL DEFAULT 0,
-	-- "reminder_timer" INTEGER,
+	"reminder_timer_in_days" INTEGER,
 	PRIMARY KEY("id")
 	FOREIGN KEY("category_type")
 		REFERENCES "category_types" ("id")
@@ -16,7 +16,7 @@ CREATE TABLE categories (
 		ON UPDATE NO ACTION,
 	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2),
 	CHECK ("show_in_streaks" >= 0 AND "show_in_streaks" < 2)
-	-- CHECK ("reminder_timer" >= 0)
+	CHECK ("reminder_timer_in_days" >= 0)
 );
 
 CREATE TABLE "entries" (
@@ -44,7 +44,7 @@ CREATE TABLE "choices" (
 	"disabled_bool" INTEGER NOT NULL DEFAULT 0,
 	"category_label" TEXT NOT NULL,
 	"show_in_streaks" INTEGER NOT NULL DEFAULT 0,
-	-- "reminder_timer" INTEGER,
+	"reminder_timer_in_days" INTEGER,
 	PRIMARY KEY("id"),
 	FOREIGN KEY ("category_label")
 		REFERENCES "categories" ("label")
@@ -52,7 +52,7 @@ CREATE TABLE "choices" (
 		ON UPDATE CASCADE,
 	CHECK ("disabled_bool" >= 0 AND "disabled_bool" < 2)
 	CHECK ("show_in_streaks" >= 0 AND "show_in_streaks" < 2)
-	-- CHECK ("reminder_timer" >= 0)
+	CHECK ("reminder_timer_in_days" >= 0)
 );
 
 CREATE TABLE "category_types" (
