@@ -5,6 +5,8 @@ use std::path::Path;
 
 use toml_schema::TomlData;
 
+// TODO: auto-generate shortcuts if none are provided.
+
 pub fn load_toml(path_string: &str) -> Result<TomlData, toml::de::Error> {
     let mut test_toml_path_string = path_string.to_owned();
     dotenvy::dotenv().ok();
