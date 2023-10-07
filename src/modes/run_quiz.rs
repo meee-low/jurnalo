@@ -33,7 +33,7 @@ pub fn quiz_full(content: &[String]) -> Result<(), Error> {
             println!(
                 "{}",
                 cs.iter()
-                    .map(|c| format_choice_and_shortcut(c))
+                    .map(format_choice_and_shortcut)
                     .collect::<Vec<String>>()
                     .join(" ")
             );
