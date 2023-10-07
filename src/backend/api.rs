@@ -208,7 +208,9 @@ pub fn get_timestamps_for_streaks_of_choices(
     Ok(results)
 }
 
-pub fn get_latest_timestamp_for_choice(choice_id: i32) -> Result<Option<chrono::NaiveDateTime>, diesel::result::Error> {
+pub fn get_latest_timestamp_for_choice(
+    choice_id: i32,
+) -> Result<Option<chrono::NaiveDateTime>, diesel::result::Error> {
     use schema::{choices, entries};
 
     let mut connection = establish_connection();

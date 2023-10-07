@@ -58,7 +58,6 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     }
 }
 
-
 enum Command {
     Full,
     QuickNote,

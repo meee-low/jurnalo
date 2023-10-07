@@ -1,5 +1,5 @@
-use crate::errors::{Error, ParsingCommandError};
 use crate::backend::api;
+use crate::errors::{Error, ParsingCommandError};
 use crate::models;
 
 use chrono::prelude::*;
@@ -129,7 +129,6 @@ fn extract_shortcuts_from_input(
 
     result
 }
-
 
 fn fetch_and_process_streaks() -> HashMap<String, [bool; STREAK_RANGE]> {
     use chrono::Duration;
