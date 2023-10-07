@@ -107,7 +107,7 @@ fn quiz_full(content: &[String]) -> Result<(), Error> {
             println!(
                 "{}",
                 cs.iter()
-                    .map(|c| format!("[{}] {}", c.shortcut, c.label))
+                    .map(|c| format_choice_and_shortcut(c))
                     .collect::<Vec<String>>()
                     .join(" ")
             );
@@ -339,6 +339,31 @@ fn format_streaks_into_table(
     }
 
     Some(table)
+}
+
+fn format_choice_and_shortcut(choice: &models::queryable_or_selectable::Choice) -> String {
+    if !choice_is_due(choice) {
+        format!("[{}] {}", choice.shortcut, choice.label)
+    } else {
+        format!("[{}] *{}*", choice.shortcut, choice.label)
+    }
+}
+
+fn choice_is_due(choice: &models::queryable_or_selectable::Choice) -> bool {
+    if choice.reminder_timer_in_days.is_none() {
+        return false;
+    }
+
+    let reminder_timer_in_days = choice.reminder_timer_in_days.unwrap();
+    let now = chrono::Utc::now().naive_utc();
+    let timestamp = backend::api::get_latest_timestamp_for_choice(choice.id).unwrap();
+
+    if let Some(ts) = timestamp {
+        let days_since_last_entry = (now - ts).num_days();
+        return days_since_last_entry >= reminder_timer_in_days.into();
+    }
+
+    true // default behavior, if no entry if found, should be true.
 }
 
 enum Command {
