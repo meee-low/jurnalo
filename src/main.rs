@@ -40,7 +40,7 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
     // Could be useful for multi-word commands e.g.: `jurnalo category add`.
     match command {
         C::Full => quiz_full(content),
-        C::QuickNote => parse_note(content),
+        C::QuickNote => modes::quick_note::parse_note(content),
         C::Habit => {
             todo!()
         }
@@ -60,26 +60,6 @@ fn parse_and_run_command(command_string: &str, content: &[String]) -> Result<(),
             todo!()
         }
     }
-}
-
-fn parse_note(content: &[String]) -> Result<(), Error> {
-    let message = content.join(" ");
-    if message.is_empty() {
-        println!("You must provide a message with this command.")
-    }
-    match add_note(message) {
-        Ok(_) => Ok(()),
-        Err(e) => Err(e),
-    }
-}
-
-fn add_note(note: String) -> Result<(), Error> {
-    if note.is_empty() {
-        todo!();
-    }
-    api::post_entry(None, None, Some(note.clone()))?;
-    println!("Success! Saved note:\n{}", note);
-    Ok(())
 }
 
 fn get_user_input() -> String {
