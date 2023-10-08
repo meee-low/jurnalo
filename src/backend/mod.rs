@@ -131,7 +131,7 @@ struct ObjectsToInsertFromSetup {
     quiz_to_cat: Vec<m_ins::NewQuizToCategory>,
 }
 
-#[allow(clippy::needless_late_init)]
+#[allow(clippy::needless_late_init)] // reason: keep the code more readable by having the similar variables declared in the same place
 fn toml_to_db_query(toml_data: &toml_schema::TomlData) -> ObjectsToInsertFromSetup {
     let mut result_questions: Vec<m_ins::NewCategory> = Vec::new();
     let mut result_question_options: Vec<m_ins::NewChoice> = Vec::new();
