@@ -1,3 +1,4 @@
+/// This file contains functions that modify the database.
 use crate::backend::establish_connection;
 use crate::backend::schema;
 use crate::errors::Error;

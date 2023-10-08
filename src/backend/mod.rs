@@ -9,8 +9,9 @@ use std::env;
 use crate::models;
 pub mod api;
 pub mod schema;
-mod toml_utils;
-use toml_utils::{load_toml, toml_schema};
+// mod toml_utils;
+mod initial_setup;
+use initial_setup::toml_utils::{load_toml, toml_schema};
 
 use models::insertable as m_ins;
 
@@ -26,6 +27,7 @@ pub fn setup() {
     create_database_if_it_doesnt_exist(&mut connection);
 }
 
+/// Establishes a connection to the database, and returns the connection.
 pub fn establish_connection() -> SqliteConnection {
     dotenvy::dotenv().ok();
     let database_path: String = env::var("DATABASE_URL").expect("`DATABASE_URL` not set in .env");

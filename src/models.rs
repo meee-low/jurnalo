@@ -1,4 +1,5 @@
 pub mod queryable_or_selectable {
+    /// This module contains structs that are used for querying the database.
     use chrono::NaiveDateTime;
     use diesel::prelude::*;
 
@@ -69,6 +70,7 @@ pub mod queryable_or_selectable {
 }
 
 pub mod insertable {
+    /// This module contains structs that are used for inserting into the database.
     use diesel::prelude::*;
 
     #[derive(Insertable, Default)]

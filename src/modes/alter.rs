@@ -1,3 +1,4 @@
+/// This module contains functions for altering the database.
 use crate::backend::api;
 use crate::errors::Error;
 

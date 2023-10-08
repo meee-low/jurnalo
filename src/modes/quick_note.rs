@@ -1,6 +1,8 @@
+/// This module contains the logic for the `quick_note` mode.
 use crate::backend::api;
 use crate::errors::Error;
 
+/// Parses the content of the note and adds it to the database.
 pub fn parse_note(content: &[String]) -> Result<(), Error> {
     let message = content.join(" ");
     if message.is_empty() {

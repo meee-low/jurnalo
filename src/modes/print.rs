@@ -1,7 +1,9 @@
+/// This module contains the logic for the print mode.
 use itertools::Itertools;
 
 use crate::backend::api;
 
+/// Returns a formatted string containing all the entries between the two dates.
 pub fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
