@@ -1,5 +1,4 @@
 use super::clap_structs::{Args, CategorySubcommands, QuizSubcommands, SubCommand};
-use crate::errors::Error;
 
 use crate::modes;
 
@@ -32,8 +31,7 @@ pub fn dispatch(args: &Args) {
                 dispatch_quiz_subcommands(subcommand);
             }
             SubCommand::Init { path, config } => {
-                println!("Init: {:?}", subcommand);
-                todo!();
+                crate::backend::setup(config, path)
             }
         },
         None => {

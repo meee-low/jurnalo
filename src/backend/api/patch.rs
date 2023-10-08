@@ -8,7 +8,7 @@ use diesel::prelude::*;
 pub fn link_category_to_quiz(category: &str, quiz: &str) -> Result<(), Error> {
     use schema::{categories, quizzes, quizzes_to_categories};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that category exists in the database:
     categories::table
@@ -56,7 +56,7 @@ pub fn link_category_to_quiz(category: &str, quiz: &str) -> Result<(), Error> {
 pub fn unlink_category_from_quiz(category: &str, quiz: &str) -> Result<(), Error> {
     use schema::quizzes_to_categories;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that category exists in the database:
     quizzes_to_categories::table
@@ -88,7 +88,7 @@ pub fn unlink_category_from_quiz(category: &str, quiz: &str) -> Result<(), Error
 pub fn disable_choice(choice: &str) -> Result<(), Error> {
     use schema::choices;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that choice exists in the database:
     choices::table
@@ -109,7 +109,7 @@ pub fn disable_choice(choice: &str) -> Result<(), Error> {
 pub fn disable_category(category: &str) -> Result<(), Error> {
     use schema::categories;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that category exists in the database:
     categories::table
@@ -127,10 +127,10 @@ pub fn disable_category(category: &str) -> Result<(), Error> {
     }
 }
 
-pub fn toggle_show_in_streaks_for_choice(choice: &str) -> Result<(), Error> {
+pub fn toggle_show_in_streaks_for_choice(category: &str, choice: &str) -> Result<(), Error> {
     use schema::choices;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that choice exists in the database:
     choices::table
@@ -155,7 +155,7 @@ pub fn toggle_show_in_streaks_for_choice(choice: &str) -> Result<(), Error> {
 pub fn change_timer_for_choice(choice: &str, new_timer: u32) -> Result<(), Error> {
     use schema::choices;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // confirm that choice exists in the database:
     choices::table
@@ -176,7 +176,7 @@ pub fn change_timer_for_choice(choice: &str, new_timer: u32) -> Result<(), Error
 pub fn move_last_entry_to_yesterday() -> Result<(), Error> {
     use schema::entries;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     // get the timestamp of the last entry:
     let last_entry_timestamp = match entries::table

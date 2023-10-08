@@ -12,7 +12,7 @@ pub mod patch;
 fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
     use schema::entries::dsl::*;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     diesel::insert_into(entries)
         .values(&new_entry)
@@ -32,7 +32,7 @@ fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error>
 
 //     use m_qos::Category;
 
-//     let mut connection = establish_connection();
+//     let mut connection = establish_connection(None);
 
 //     match quizzes::table
 //         .filter(quizzes::label.eq(quiz_label))
@@ -57,7 +57,7 @@ pub fn get_categories_and_choices_from_quiz_label(
 ) -> Result<BTreeMap<m_qos::Category, Option<Vec<m_qos::Choice>>>, crate::errors::Error> {
     use schema::{categories, choices, quizzes, quizzes_to_categories};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<(m_qos::Category, Option<m_qos::Choice>)> = quizzes::table
         .inner_join(
@@ -104,7 +104,7 @@ pub fn get_entries_between_dates(
     let sd = starting_date;
     let ed = end_date;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<EntryWithLabelsTuple> = entries::table
         .filter(entries::timestamp.le(sd))
@@ -153,7 +153,7 @@ pub fn post_multiple_entries(
         })
         .collect();
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     diesel::insert_into(entries::dsl::entries)
         .values(new_entries_obj)
@@ -166,7 +166,7 @@ pub fn post_multiple_entries(
 // ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
 //     use schema::{categories, entries};
 
-//     let mut connection = establish_connection();
+//     let mut connection = establish_connection(None);
 
 //     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
 //         .left_join(entries::table)
@@ -181,7 +181,7 @@ pub fn post_multiple_entries(
 // ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
 //     use schema::{categories, entries};
 
-//     let mut connection = establish_connection();
+//     let mut connection = establish_connection(None);
 
 //     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
 //         .left_join(entries::table)
@@ -201,7 +201,7 @@ pub fn get_timestamps_for_streaks_of_choices(
 ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
     use schema::{choices, entries};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = choices::table
         .filter(choices::show_in_streaks.eq(1))
@@ -219,7 +219,7 @@ pub fn get_latest_timestamp_for_choice(
 ) -> Result<Option<chrono::NaiveDateTime>, diesel::result::Error> {
     use schema::{choices, entries};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let result: Option<chrono::NaiveDateTime> = choices::table
         .filter(choices::id.eq(choice_id))
@@ -235,7 +235,7 @@ pub fn get_latest_timestamp_for_choice(
 // ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
 //     use schema::{choices, entries};
 
-//     let mut connection = establish_connection();
+//     let mut connection = establish_connection(None);
 
 //     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = choices::table
 //         .left_join(entries::table)
@@ -259,7 +259,7 @@ pub fn post_category(label: &str, prompt: &str) -> Result<(), diesel::result::Er
         ..Default::default()
     };
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     diesel::insert_into(categories::table)
         .values(&new_category)
@@ -276,7 +276,7 @@ pub fn post_choice(
     use schema::{categories, choices};
 
     // check that category exists:
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     categories::table
         .filter(categories::label.eq(category_label))
@@ -307,7 +307,7 @@ pub fn post_quiz(label: &str) -> Result<(), diesel::result::Error> {
         ..Default::default()
     };
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     diesel::insert_into(quizzes::table)
         .values(&new_quiz)
@@ -321,7 +321,7 @@ pub fn post_quiz(label: &str) -> Result<(), diesel::result::Error> {
 pub fn get_all_categories() -> Result<Vec<m_qos::Category>, diesel::result::Error> {
     use schema::categories;
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<m_qos::Category> = categories::table
         .load::<m_qos::Category>(&mut connection)
@@ -335,7 +335,7 @@ pub fn get_choices_in_category(
 ) -> Result<Vec<m_qos::Choice>, diesel::result::Error> {
     use schema::{categories, choices};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<m_qos::Choice> = categories::table
         .filter(categories::label.eq(category_label))
@@ -352,7 +352,7 @@ pub fn get_categories_in_quiz(
 ) -> Result<Vec<m_qos::Category>, diesel::result::Error> {
     use schema::{categories, quizzes, quizzes_to_categories};
 
-    let mut connection = establish_connection();
+    let mut connection = establish_connection(None);
 
     let results: Vec<m_qos::Category> = quizzes::table
         .filter(quizzes::label.eq(quiz_label))
