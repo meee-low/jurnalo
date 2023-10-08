@@ -13,9 +13,7 @@ pub struct Args {
     pub subcommand: Option<SubCommand>,
 }
 
-// TODO: Remove Clone derive once we fully implement the dispatch function.
-
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug)]
 pub enum SubCommand {
     /// Prints the recent entries to the terminal.
     Print {
@@ -51,7 +49,7 @@ pub enum SubCommand {
     },
 }
 
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug)]
 pub enum CategorySubcommands {
     /// Adds a new category.
     Create {
@@ -87,7 +85,7 @@ pub enum CategorySubcommands {
     ListChoices { category: String },
 }
 
-#[derive(Subcommand, Debug, Clone)]
+#[derive(Subcommand, Debug)]
 pub enum QuizSubcommands {
     /// Adds a new quiz.
     Create {
@@ -104,17 +102,20 @@ pub enum QuizSubcommands {
         new_name: String,
     },
     /// Add an existing category to the quiz.
-    AddCategory {
+    LinkCategory {
         quiz: String,
 
         #[arg(short, long, value_name = "CATEGORY")]
         category: String,
     },
     /// Remove a category from the quiz.
-    RemoveCategory {
+    UnlinkCategory {
         quiz: String,
 
         #[arg(short, long, value_name = "CATEGORY")]
         category: String,
+    },
+    ListCategories {
+        quiz: String,
     },
 }

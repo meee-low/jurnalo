@@ -3,6 +3,7 @@ use crate::errors::Error;
 
 use crate::modes;
 
+/// Dispatches the arguments to the appropriate functions.
 pub fn dispatch(args: &Args) {
     if args.quiz.is_none() && args.note.is_none() && args.subcommand.is_none() {
         println!("No arguments provided");
@@ -36,65 +37,62 @@ pub fn dispatch(args: &Args) {
             }
         },
         None => {
-            unreachable!();
+            unreachable!("If we got here, it means that quiz is None, note is None, and subcommand is None, which goes against our assumptions.");
         }
     }
 }
 
+/// Dispatches the category subcommands to the appropriate functions.
 fn dispatch_category_subcommands(subcommand: &CategorySubcommands) {
     match subcommand {
         CategorySubcommands::Create { category, prompt } => {
-            println!("Category: {:?}", subcommand);
-            todo!();
+            modes::alter::new_category(category, prompt);
         }
         CategorySubcommands::Disable { category } => {
-            println!("Category: {:?}", subcommand);
-            todo!();
+            modes::alter::disable_category(category);
         }
         CategorySubcommands::Rename { category, new_name } => {
-            println!("Category: {:?}", subcommand);
             todo!();
+            // modes::alter::rename_category(category, new_name);
         }
         CategorySubcommands::List => {
-            println!("Category: {:?}", subcommand);
-            todo!();
+            modes::alter::list_all_categories();
         }
         CategorySubcommands::AddChoice {
             category,
             choice_label,
             choice_shortcut,
         } => {
-            println!("Category: {:?}", subcommand);
-            todo!();
+            modes::alter::new_choice(choice_label, choice_shortcut, category);
         }
         CategorySubcommands::ListChoices { category } => {
-            println!("Category: {:?}", subcommand);
-            todo!();
+            modes::alter::list_all_choices_in_category(category);
         }
     }
 }
 
+/// Dispatches the quiz subcommands to the appropriate functions.
 fn dispatch_quiz_subcommands(subcommand: &QuizSubcommands) {
     match subcommand {
         QuizSubcommands::Create { quiz } => {
-            println!("Quiz: {:?}", subcommand);
-            todo!();
+            modes::alter::new_quiz(quiz);
         }
-        QuizSubcommands::AddCategory { quiz, category } => {
-            println!("Quiz: {:?}", subcommand);
-            todo!();
+        QuizSubcommands::LinkCategory { quiz, category } => {
+            modes::alter::link_category_to_quiz(category, quiz);
         }
-        QuizSubcommands::RemoveCategory { quiz, category } => {
-            println!("Quiz: {:?}", subcommand);
-            todo!();
+        QuizSubcommands::UnlinkCategory { quiz, category } => {
+            modes::alter::unlink_category_from_quiz(category, quiz);
         }
         QuizSubcommands::Rename { quiz, new_name } => {
-            println!("Quiz: {:?}", subcommand);
             todo!();
+            // modes::alter::rename_quiz(quiz, new_name);
         }
         QuizSubcommands::List => {
-            println!("Quiz: {:?}", subcommand);
             todo!();
+            // modes::alter::list_all_quizzes();
+        }
+        QuizSubcommands::ListCategories { quiz } => {
+            modes::alter::list_all_categories_in_quiz(quiz);
         }
     }
 }
