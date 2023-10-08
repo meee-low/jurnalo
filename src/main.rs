@@ -14,19 +14,9 @@ fn main() -> Result<(), Error> {
 
     let args = cli_parsing::Args::parse();
 
-    cli_parsing::dispatch(args)?;
-    // match args.len() {
-    //     1 => {
-    //         println!("Insufficient arguments");
-    //         // TODO: Help message. Only returning error for now.
-    //         Err(ParsingCommandError::TooFewArguments.into())
-    //     }
-    //     2.. => {
-    //         // Has command.
-    //         parse_and_run_command(&args[1], &args[2..])
-    //     }
-    //     _ => unreachable!(),
-    // }
+    dbg!(&args);
+
+    cli_parsing::dispatch(&args)?;
     Ok(())
 }
 

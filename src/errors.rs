@@ -14,6 +14,7 @@ pub enum ParsingCommandError {
     TooFewArguments,
     CommandNotRecognized(String),
     TooManyArguments,
+    QuizNotFound(String),
 }
 
 // Implementations:
