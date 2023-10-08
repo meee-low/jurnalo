@@ -51,6 +51,7 @@ fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error>
 //     }
 // }
 
+/// Returns a map of categories to choices, from the choices in the quiz label.
 pub fn get_categories_and_choices_from_quiz_label(
     quiz_label: &str,
 ) -> Result<BTreeMap<m_qos::Category, Option<Vec<m_qos::Choice>>>, crate::errors::Error> {
@@ -91,6 +92,7 @@ pub fn get_categories_and_choices_from_quiz_label(
     Ok(actual_results)
 }
 
+/// Returns the entries between the starting and ending dates, inclusive.
 pub fn get_entries_between_dates(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
@@ -194,6 +196,7 @@ pub fn post_multiple_entries(
 //     Ok(results)
 // }
 
+/// Returns pairs of choice_label + timestamps for the choices that are shown in streaks.
 pub fn get_timestamps_for_streaks_of_choices(
 ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
     use schema::{choices, entries};
@@ -210,6 +213,7 @@ pub fn get_timestamps_for_streaks_of_choices(
     Ok(results)
 }
 
+/// Returns the latest timestamp for the choice with the given id.
 pub fn get_latest_timestamp_for_choice(
     choice_id: i32,
 ) -> Result<Option<chrono::NaiveDateTime>, diesel::result::Error> {
