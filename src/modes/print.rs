@@ -3,8 +3,34 @@ use itertools::Itertools;
 
 use crate::backend::api;
 
+/// Prints the entries from the last `days` days.
+/// If `output` is `None`, the entries are printed to stdout. Otherwise, they are written to the file at `output`.
+pub fn print(days: u32, output: &Option<String>) -> Result<(), crate::errors::Error> {
+    let starting_date = chrono::Utc::now().naive_utc() - chrono::Duration::days(days as i64);
+    let end_date = chrono::Utc::now().naive_utc();
+
+    let printable = printable_entries(starting_date, end_date)?;
+    if printable.is_empty() {
+        println!("No entries found");
+        return Ok(());
+    }
+
+    match output {
+        Some(path) => {
+            std::fs::write(path, printable)?;
+            // TODO: Add a message saying that the entries were written to the file.
+            // TODO: Error handling here if this fails.
+        }
+        None => {
+            println!("{}", printable);
+        }
+    }
+
+    Ok(())
+}
+
 /// Returns a formatted string containing all the entries between the two dates.
-pub fn printable_entries(
+fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
 ) -> Result<String, crate::errors::Error> {

@@ -3,7 +3,7 @@ use crate::errors::Error;
 
 use crate::modes;
 
-pub fn dispatch(args: &Args) -> Result<(), Error> {
+pub fn dispatch(args: &Args) {
     if args.quiz.is_none() && args.note.is_none() && args.subcommand.is_none() {
         println!("No arguments provided");
     }
@@ -13,8 +13,8 @@ pub fn dispatch(args: &Args) -> Result<(), Error> {
     // Therefore, at least one of quiz or subcommand is Some.
 
     if let Some(ref quiz_name) = args.quiz {
-        modes::run_quiz::quiz_full(quiz_name);
-        return Ok(());
+        modes::run_quiz::quiz_full(quiz_name).unwrap();
+        return;
     }
 
     // Now we can assume that quiz and note are None, and subcommand is Some.
@@ -22,8 +22,7 @@ pub fn dispatch(args: &Args) -> Result<(), Error> {
     match args.subcommand {
         Some(ref subcommand) => match subcommand {
             SubCommand::Print { days, output } => {
-                println!("Print: {:?}", subcommand);
-                todo!();
+                modes::print::print(*days, output);
             }
             SubCommand::Category { subcommand } => {
                 dispatch_category_subcommands(subcommand);
@@ -40,8 +39,6 @@ pub fn dispatch(args: &Args) -> Result<(), Error> {
             unreachable!();
         }
     }
-
-    todo!("{:?}", args);
 }
 
 fn dispatch_category_subcommands(subcommand: &CategorySubcommands) {
