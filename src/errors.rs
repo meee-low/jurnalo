@@ -7,6 +7,7 @@ pub enum Error {
     IO(std::io::Error),
     CLIParsing(ParsingCommandError),
     DatabaseError(DieselError),
+    InvalidInput(String),
 }
 #[derive(Debug)]
 pub enum ParsingCommandError {

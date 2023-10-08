@@ -4,6 +4,8 @@ use crate::models::{insertable as m_ins, queryable_or_selectable as m_qos};
 use diesel::prelude::*;
 use std::collections::BTreeMap;
 
+pub mod patch;
+
 // IDEA: maybe have functions return `queries`, so they can be more modular (e.g. apply a filter on the results of a query from another function)
 // However, this is more abstraction, so only do it when it's actually necessary to refactor.
 
@@ -243,6 +245,125 @@ pub fn get_latest_timestamp_for_choice(
 
 //     Ok(results)
 // }
+
+pub fn post_category(label: &str, prompt: &str) -> Result<(), diesel::result::Error> {
+    use schema::categories;
+
+    let new_category = m_ins::NewCategory {
+        label: label.to_string(),
+        prompt: prompt.to_string(),
+        ..Default::default()
+    };
+
+    let mut connection = establish_connection();
+
+    diesel::insert_into(categories::table)
+        .values(&new_category)
+        .execute(&mut connection)?;
+
+    Ok(())
+}
+
+pub fn post_choice(
+    label: &str,
+    shortcut: &str,
+    category_label: &str,
+) -> Result<(), diesel::result::Error> {
+    use schema::{categories, choices};
+
+    // check that category exists:
+    let mut connection = establish_connection();
+
+    categories::table
+        .filter(categories::label.eq(category_label))
+        .select(categories::id)
+        .first::<i32>(&mut connection)?;
+
+    // TODO: check that shortcut is unique among the choices in the category.
+
+    let new_choice = m_ins::NewChoice {
+        label: label.to_string(),
+        shortcut: shortcut.to_string(),
+        category_label: category_label.to_string(),
+        ..Default::default()
+    };
+
+    diesel::insert_into(choices::table)
+        .values(&new_choice)
+        .execute(&mut connection)?;
+
+    Ok(())
+}
+
+pub fn post_quiz(label: &str) -> Result<(), diesel::result::Error> {
+    use schema::quizzes;
+
+    let new_quiz = m_ins::NewQuiz {
+        label: label.to_string(),
+        ..Default::default()
+    };
+
+    let mut connection = establish_connection();
+
+    diesel::insert_into(quizzes::table)
+        .values(&new_quiz)
+        .execute(&mut connection)?;
+
+    // This will return a unique constraint error if the quiz already exists.
+
+    Ok(())
+}
+
+pub fn get_all_categories() -> Result<Vec<m_qos::Category>, diesel::result::Error> {
+    use schema::categories;
+
+    let mut connection = establish_connection();
+
+    let results: Vec<m_qos::Category> = categories::table
+        .load::<m_qos::Category>(&mut connection)
+        .expect("Error loading categories");
+
+    Ok(results)
+}
+
+pub fn get_choices_in_category(
+    category_label: &str,
+) -> Result<Vec<m_qos::Choice>, diesel::result::Error> {
+    use schema::{categories, choices};
+
+    let mut connection = establish_connection();
+
+    let results: Vec<m_qos::Choice> = categories::table
+        .filter(categories::label.eq(category_label))
+        .inner_join(choices::table.on(categories::label.eq(choices::category_label)))
+        .select(choices::all_columns)
+        .load::<m_qos::Choice>(&mut connection)
+        .expect("Error loading choices");
+
+    Ok(results)
+}
+
+pub fn get_categories_in_quiz(
+    quiz_label: &str,
+) -> Result<Vec<m_qos::Category>, diesel::result::Error> {
+    use schema::{categories, quizzes, quizzes_to_categories};
+
+    let mut connection = establish_connection();
+
+    let results: Vec<m_qos::Category> = quizzes::table
+        .filter(quizzes::label.eq(quiz_label))
+        .inner_join(
+            quizzes_to_categories::table.on(quizzes::label.eq(quizzes_to_categories::quiz_label)),
+        )
+        .inner_join(
+            categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
+        )
+        .select(categories::all_columns)
+        .load::<m_qos::Category>(&mut connection)
+        .expect("Error loading categories");
+
+    Ok(results)
+}
 
 // type-aliases
 
