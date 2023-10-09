@@ -25,6 +25,10 @@ clap = { version = "4.4.6", features = ["derive"] }
 name = "jurnalo"
 path = "src/main.rs"
 
-# [[bin]]
-# name = "backend"
-# path = "src/backend.rs"
+[profile.minsize]
+# Note: This can be run with `cargo build --profile minsize`. Very slow compilation, optimized for minimum file size.
+inherits = "release"
+opt-level = "z"
+strip = true
+lto = true
+codegen-units = 1
