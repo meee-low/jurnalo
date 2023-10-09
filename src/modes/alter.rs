@@ -2,7 +2,6 @@ use core::panic;
 
 /// This module contains functions for altering the database.
 use crate::backend::api;
-use crate::errors::Error;
 
 pub fn new_category(label: &str, prompt: &str) {
     if label.is_empty() || prompt.is_empty() {
@@ -74,11 +73,11 @@ pub fn list_all_choices_in_category(category_label: &str) {
     }
 }
 
-pub fn disable_choice(choice: &str) {
-    if choice.is_empty() {
-        panic!("Invalid Input: You must provide a choice.");
+pub fn disable_choice(category: &str, choice: &str) {
+    if choice.is_empty() || category.is_empty() {
+        panic!("Invalid Input: You must provide a choice and a category.");
     }
-    api::patch::disable_choice(choice).unwrap();
+    api::patch::disable_choice(category, choice).unwrap();
     println!("Success! Disabled choice {}.", choice);
 }
 
@@ -98,11 +97,19 @@ pub fn toggle_show_in_streaks_for_choice(category: &str, choice: &str) {
     println!("Success! Toggled show_in_streaks for choice {}.", choice);
 }
 
-pub fn change_timer_for_choice(choice: &str, new_timer: u32) {
-    if choice.is_empty() {
-        panic!("Invalid Input: You must provide a choice.")
+pub fn change_timer_for_choice(category: &str, choice: &str, new_timer: i32) {
+    if choice.is_empty() || category.is_empty() {
+        panic!("Invalid Input: You must provide a choice and a category.")
     }
-    api::patch::change_timer_for_choice(choice, new_timer).unwrap();
+    let timer_arg = if new_timer == -1 {
+        None
+    } else if new_timer >= 1 {
+        Some(new_timer)
+    } else {
+        panic!("Invalid Input: Timer must be -1 or greater than 1.")
+    };
+
+    api::patch::change_timer_for_choice(choice, timer_arg).unwrap();
     println!(
         "Success! Changed timer for choice {} to {} days.",
         choice, new_timer

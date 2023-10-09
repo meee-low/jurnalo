@@ -1,4 +1,6 @@
-use super::clap_structs::{Args, CategorySubcommands, QuizSubcommands, SubCommand};
+use super::clap_structs::{
+    Args, CategorySubcommands, ChoiceSubcommands, QuizSubcommands, SubCommand,
+};
 
 use crate::modes;
 
@@ -30,9 +32,8 @@ pub fn dispatch(args: &Args) {
             SubCommand::Quiz { subcommand } => {
                 dispatch_quiz_subcommands(subcommand);
             }
-            SubCommand::Init { path, config } => {
-                crate::backend::setup(config, path)
-            }
+            SubCommand::Choice { subcommand } => dispatch_choice_subcommands(subcommand),
+            SubCommand::Init { path, config } => crate::backend::setup(config, path),
         },
         None => {
             unreachable!("If we got here, it means that quiz is None, note is None, and subcommand is None, which goes against our assumptions.");
@@ -91,6 +92,42 @@ fn dispatch_quiz_subcommands(subcommand: &QuizSubcommands) {
         }
         QuizSubcommands::ListCategories { quiz } => {
             modes::alter::list_all_categories_in_quiz(quiz);
+        }
+    }
+}
+
+fn dispatch_choice_subcommands(subcommand: &ChoiceSubcommands) {
+    match subcommand {
+        ChoiceSubcommands::Add {
+            label,
+            shortcut,
+            category,
+        } => {
+            modes::alter::new_choice(label, shortcut, category);
+        }
+        ChoiceSubcommands::Disable { category, label } => {
+            modes::alter::disable_choice(category, label);
+        }
+        ChoiceSubcommands::Rename {
+            category,
+            label,
+            new_name,
+        } => {
+            todo!();
+            // modes::alter::rename_choice(label, new_name);
+        }
+        ChoiceSubcommands::List { category } => {
+            modes::alter::list_all_choices_in_category(category);
+        }
+        ChoiceSubcommands::ChangeTimer {
+            category,
+            label,
+            timer,
+        } => {
+            modes::alter::change_timer_for_choice(category, label, *timer);
+        }
+        ChoiceSubcommands::ToggleStreaks { category, label } => {
+            modes::alter::toggle_show_in_streaks_for_choice(category, label);
         }
     }
 }

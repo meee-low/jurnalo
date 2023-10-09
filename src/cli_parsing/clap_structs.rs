@@ -38,6 +38,10 @@ pub enum SubCommand {
         #[command(subcommand)]
         subcommand: QuizSubcommands,
     },
+    Choice {
+        #[command(subcommand)]
+        subcommand: ChoiceSubcommands,
+    },
     Init {
         /// The path to the directory where the database will be stored.
         #[arg(short, long, value_name = "PATH")]
@@ -117,5 +121,35 @@ pub enum QuizSubcommands {
     },
     ListCategories {
         quiz: String,
+    },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum ChoiceSubcommands {
+    List {
+        category: String,
+    },
+    Add {
+        category: String,
+        label: String,
+        shortcut: String,
+    },
+    Disable {
+        category: String,
+        label: String,
+    },
+    ChangeTimer {
+        category: String,
+        label: String,
+        timer: i32,
+    },
+    ToggleStreaks {
+        category: String,
+        label: String,
+    },
+    Rename {
+        category: String,
+        label: String,
+        new_name: String,
     },
 }

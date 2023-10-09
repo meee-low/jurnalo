@@ -85,14 +85,18 @@ pub fn unlink_category_from_quiz(category: &str, quiz: &str) -> Result<(), Error
     }
 }
 
-pub fn disable_choice(choice: &str) -> Result<(), Error> {
+pub fn disable_choice(category: &str, choice: &str) -> Result<(), Error> {
     use schema::choices;
 
     let mut connection = establish_connection(None);
 
     // confirm that choice exists in the database:
     choices::table
-        .filter(choices::label.eq(choice))
+        .filter(
+            choices::label
+                .eq(choice)
+                .and(choices::category_label.eq(category)),
+        )
         .select(choices::id)
         .first::<i32>(&mut connection)?;
 
@@ -134,7 +138,11 @@ pub fn toggle_show_in_streaks_for_choice(category: &str, choice: &str) -> Result
 
     // confirm that choice exists in the database:
     choices::table
-        .filter(choices::label.eq(choice))
+        .filter(
+            choices::label
+                .eq(choice)
+                .and(choices::category_label.eq(category)),
+        )
         .select(choices::id)
         .first::<i32>(&mut connection)?;
 
@@ -152,7 +160,7 @@ pub fn toggle_show_in_streaks_for_choice(category: &str, choice: &str) -> Result
     }
 }
 
-pub fn change_timer_for_choice(choice: &str, new_timer: u32) -> Result<(), Error> {
+pub fn change_timer_for_choice(choice: &str, new_timer: Option<i32>) -> Result<(), Error> {
     use schema::choices;
 
     let mut connection = establish_connection(None);
@@ -165,7 +173,7 @@ pub fn change_timer_for_choice(choice: &str, new_timer: u32) -> Result<(), Error
 
     // change the timer:
     match diesel::update(choices::table.filter(choices::label.eq(choice)))
-        .set(choices::reminder_timer_in_days.eq(new_timer as i32))
+        .set(choices::reminder_timer_in_days.eq(new_timer))
         .execute(&mut connection)
     {
         Ok(_) => Ok(()),
