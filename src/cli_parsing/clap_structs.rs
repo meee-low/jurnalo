@@ -42,6 +42,10 @@ pub enum SubCommand {
         #[command(subcommand)]
         subcommand: ChoiceSubcommands,
     },
+    Entries {
+        #[command(subcommand)]
+        subcommand: EntriesSubcommands,
+    },
     Init {
         /// The path to the directory where the database will be stored.
         #[arg(short, long, value_name = "PATH")]
@@ -152,4 +156,21 @@ pub enum ChoiceSubcommands {
         label: String,
         new_name: String,
     },
+}
+
+#[derive(Subcommand, Debug)]
+pub enum EntriesSubcommands {
+    /// Prints the recent entries to the terminal.
+    Print {
+        /// The number of days to print.
+        #[arg(short, long, value_name = "DAYS", default_value_t = 7 as u32)]
+        days: u32,
+
+        /// Output file: if provided, the output will be written to this file instead of stdout.
+        /// If the file already exists, it will be overwritten.
+        #[arg(short, long, value_name = "FILE")]
+        output: Option<String>,
+    },
+    /// Pushes the latest entry to yesterday.
+    PushLatestToYesterday,
 }

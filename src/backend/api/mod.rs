@@ -9,48 +9,6 @@ pub mod patch;
 // IDEA: maybe have functions return `queries`, so they can be more modular (e.g. apply a filter on the results of a query from another function)
 // However, this is more abstraction, so only do it when it's actually necessary to refactor.
 
-fn insert_entry(new_entry: m_ins::NewEntry) -> Result<(), diesel::result::Error> {
-    use schema::entries::dsl::*;
-
-    let mut connection = establish_connection(None);
-
-    diesel::insert_into(entries)
-        .values(&new_entry)
-        .execute(&mut connection)?;
-    Ok(())
-}
-
-// #[test]
-// fn test_insert_entry() {
-//     todo!()
-// }
-
-// pub fn get_categories_from_quiz_label(
-//     quiz_label: &str,
-// ) -> Result<Vec<m_qos::Category>, crate::errors::Error> {
-//     use schema::{categories, quizzes, quizzes_to_categories};
-
-//     use m_qos::Category;
-
-//     let mut connection = establish_connection(None);
-
-//     match quizzes::table
-//         .filter(quizzes::label.eq(quiz_label))
-//         .inner_join(
-//             quizzes_to_categories::table
-//                 .on(quizzes::label.eq(quizzes_to_categories::quiz_label)),
-//         )
-//         .inner_join(
-//             categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
-//         )
-//         .select(categories::all_columns)
-//         .load::<Category>(&mut connection)
-//     {
-//         Ok(vec_of_quizzes) => Ok(vec_of_quizzes),
-//         Err(e) => Err(crate::errors::Error::DatabaseError(e)),
-//     }
-// }
-
 /// Returns a map of categories to choices, from the choices in the quiz label.
 pub fn get_categories_and_choices_from_quiz_label(
     quiz_label: &str,
@@ -126,20 +84,6 @@ pub fn get_entries_between_dates(
     Ok(results)
 }
 
-pub fn post_entry(
-    category: Option<i32>,
-    value: Option<i32>,
-    details: Option<String>,
-) -> Result<(), diesel::result::Error> {
-    let new_entry = m_ins::NewEntry {
-        category,
-        value,
-        details,
-    };
-
-    insert_entry(new_entry)
-}
-
 pub fn post_multiple_entries(
     entries: Vec<(Option<i32>, Option<i32>, Option<String>)>,
 ) -> Result<(), diesel::result::Error> {
@@ -161,40 +105,6 @@ pub fn post_multiple_entries(
 
     Ok(())
 }
-
-// pub fn get_timestamps_for_categories(
-// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
-//     use schema::{categories, entries};
-
-//     let mut connection = establish_connection(None);
-
-//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
-//         .left_join(entries::table)
-//         .select((categories::label, entries::timestamp.nullable()))
-//         .load::<_>(&mut connection)
-//         .expect("Couldn't load data");
-
-//     Ok(results)
-// }
-
-// pub fn get_latest_timestamp_for_categories(
-// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
-//     use schema::{categories, entries};
-
-//     let mut connection = establish_connection(None);
-
-//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = categories::table
-//         .left_join(entries::table)
-//         .group_by(categories::id)
-//         .select((
-//             categories::label,
-//             diesel::dsl::max(entries::timestamp).nullable(),
-//         ))
-//         .load::<_>(&mut connection)
-//         .expect("Couldn't load data");
-
-//     Ok(results)
-// }
 
 /// Returns pairs of choice_label + timestamps for the choices that are shown in streaks.
 pub fn get_timestamps_for_streaks_of_choices(
@@ -230,25 +140,6 @@ pub fn get_latest_timestamp_for_choice(
 
     Ok(result)
 }
-
-// pub fn get_latest_timestamp_for_choices(
-// ) -> Result<Vec<(String, Option<chrono::NaiveDateTime>)>, diesel::result::Error> {
-//     use schema::{choices, entries};
-
-//     let mut connection = establish_connection(None);
-
-//     let results: Vec<(String, Option<chrono::NaiveDateTime>)> = choices::table
-//         .left_join(entries::table)
-//         .group_by(choices::id)
-//         .select((
-//             choices::label,
-//             diesel::dsl::max(entries::timestamp).nullable(),
-//         ))
-//         .load::<_>(&mut connection)
-//         .expect("Couldn't load data");
-
-//     Ok(results)
-// }
 
 pub fn post_category(label: &str, prompt: &str) -> Result<(), diesel::result::Error> {
     use schema::categories;
@@ -365,6 +256,26 @@ pub fn get_categories_in_quiz(
         .select(categories::all_columns)
         .load::<m_qos::Category>(&mut connection)
         .expect("Error loading categories");
+
+    Ok(results)
+}
+
+/// Returns a vector of all quizzes, with their categories.
+pub fn get_all_quizzes() -> Result<Vec<(m_qos::Quiz, m_qos::Category)>, diesel::result::Error> {
+    use schema::{categories, quizzes, quizzes_to_categories};
+
+    let mut connection = establish_connection(None);
+
+    let results: Vec<(m_qos::Quiz, m_qos::Category)> = quizzes::table
+        .inner_join(
+            quizzes_to_categories::table.on(quizzes_to_categories::quiz_label.eq(quizzes::label)),
+        )
+        .inner_join(
+            categories::table.on(quizzes_to_categories::category_label.eq(categories::label)),
+        )
+        .select((quizzes::all_columns, categories::all_columns))
+        .load::<(m_qos::Quiz, m_qos::Category)>(&mut connection)
+        .expect("Error loading quizzes");
 
     Ok(results)
 }

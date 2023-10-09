@@ -207,3 +207,107 @@ pub fn move_last_entry_to_yesterday() -> Result<(), Error> {
         Err(e) => Err(Error::DatabaseError(e)),
     }
 }
+
+pub fn rename_category(category: &str, new_name: &str) -> Result<(), Error> {
+    use schema::categories;
+
+    let mut connection = establish_connection(None);
+
+    // confirm that category exists in the database:
+    categories::table
+        .filter(categories::label.eq(category))
+        .select(categories::id)
+        .first::<i32>(&mut connection)?;
+
+    // confirm that the new name is not already taken:
+    match categories::table
+        .filter(categories::label.eq(new_name))
+        .select(categories::id)
+        .first::<i32>(&mut connection)
+    {
+        Ok(_) => return Err(Error::CategoryAlreadyExists(new_name.to_owned())),
+        Err(diesel::result::Error::NotFound) => (),
+        Err(e) => return Err(Error::DatabaseError(e)),
+    }
+
+    // rename the category:
+    match diesel::update(categories::table.filter(categories::label.eq(category)))
+        .set(categories::label.eq(new_name))
+        .execute(&mut connection)
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Error::DatabaseError(e)),
+    }
+}
+
+pub fn rename_choice(category: &str, choice: &str, new_name: &str) -> Result<(), Error> {
+    use schema::choices;
+
+    let mut connection = establish_connection(None);
+
+    // confirm that choice exists in the database:
+    choices::table
+        .filter(
+            choices::label
+                .eq(choice)
+                .and(choices::category_label.eq(category)),
+        )
+        .select(choices::id)
+        .first::<i32>(&mut connection)?;
+
+    // confirm that the new name is not already taken within the category:
+    match choices::table
+        .filter(
+            choices::label
+                .eq(new_name)
+                .and(choices::category_label.eq(category)),
+        )
+        .select(choices::id)
+        .first::<i32>(&mut connection)
+    {
+        Ok(_) => return Err(Error::ChoiceAlreadyExists(new_name.to_owned())),
+        Err(diesel::result::Error::NotFound) => (),
+        Err(e) => return Err(Error::DatabaseError(e)),
+    }
+
+    // rename the choice:
+    match diesel::update(choices::table.filter(choices::label.eq(choice)))
+        .set(choices::label.eq(new_name))
+        .execute(&mut connection)
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Error::DatabaseError(e)),
+    }
+}
+
+pub fn rename_quiz(quiz: &str, new_name: &str) -> Result<(), Error> {
+    use schema::quizzes;
+
+    let mut connection = establish_connection(None);
+
+    // confirm that quiz exists in the database:
+    quizzes::table
+        .filter(quizzes::label.eq(quiz))
+        .select(quizzes::id)
+        .first::<i32>(&mut connection)?;
+
+    // confirm that the new name is not already taken:
+    match quizzes::table
+        .filter(quizzes::label.eq(new_name))
+        .select(quizzes::id)
+        .first::<i32>(&mut connection)
+    {
+        Ok(_) => return Err(Error::QuizAlreadyExists(new_name.to_owned())),
+        Err(diesel::result::Error::NotFound) => (),
+        Err(e) => return Err(Error::DatabaseError(e)),
+    }
+
+    // rename the quiz:
+    match diesel::update(quizzes::table.filter(quizzes::label.eq(quiz)))
+        .set(quizzes::label.eq(new_name))
+        .execute(&mut connection)
+    {
+        Ok(_) => Ok(()),
+        Err(e) => Err(Error::DatabaseError(e)),
+    }
+}

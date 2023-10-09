@@ -1,4 +1,4 @@
-use core::panic;
+use itertools::Itertools;
 
 /// This module contains functions for altering the database.
 use crate::backend::api;
@@ -119,4 +119,39 @@ pub fn change_timer_for_choice(category: &str, choice: &str, new_timer: i32) {
 pub fn move_last_entry_to_yesterday() {
     api::patch::move_last_entry_to_yesterday().unwrap();
     println!("Success! Moved last entry to yesterday.");
+}
+
+pub fn rename_category(category: &str, new_name: &str) {
+    if category.is_empty() || new_name.is_empty() {
+        panic!("Invalid Input: You must provide a category and a new name.");
+    }
+    api::patch::rename_category(category, new_name).unwrap();
+    println!("Success! Renamed category {} to {}.", category, new_name);
+}
+
+pub fn rename_choice(category: &str, choice: &str, new_name: &str) {
+    if choice.is_empty() || category.is_empty() || new_name.is_empty() {
+        panic!("Invalid Input: You must provide a choice, a category, and a new name.");
+    }
+    api::patch::rename_choice(category, choice, new_name).unwrap();
+    println!("Success! Renamed choice {} to {}.", choice, new_name);
+}
+
+pub fn rename_quiz(quiz: &str, new_name: &str) {
+    if quiz.is_empty() || new_name.is_empty() {
+        panic!("Invalid Input: You must provide a quiz and a new name.");
+    }
+    api::patch::rename_quiz(quiz, new_name).unwrap();
+    println!("Success! Renamed quiz {} to {}.", quiz, new_name);
+}
+
+pub fn list_all_quizzes() {
+    let quizzes = api::get_all_quizzes().unwrap();
+
+    for (quiz, group) in &quizzes.into_iter().group_by(|(quiz, _)| quiz.label.clone()) {
+        println!("{}", quiz);
+        for (_, category) in group {
+            println!("  {}: {}", category.label, category.prompt);
+        }
+    }
 }

@@ -1,5 +1,5 @@
 use super::clap_structs::{
-    Args, CategorySubcommands, ChoiceSubcommands, QuizSubcommands, SubCommand,
+    Args, CategorySubcommands, ChoiceSubcommands, EntriesSubcommands, QuizSubcommands, SubCommand,
 };
 
 use crate::modes;
@@ -33,6 +33,9 @@ pub fn dispatch(args: &Args) {
                 dispatch_quiz_subcommands(subcommand);
             }
             SubCommand::Choice { subcommand } => dispatch_choice_subcommands(subcommand),
+            SubCommand::Entries { subcommand } => {
+                dispatch_entries_subcommands(subcommand);
+            }
             SubCommand::Init { path, config } => crate::backend::setup(config, path),
         },
         None => {
@@ -51,8 +54,7 @@ fn dispatch_category_subcommands(subcommand: &CategorySubcommands) {
             modes::alter::disable_category(category);
         }
         CategorySubcommands::Rename { category, new_name } => {
-            todo!();
-            // modes::alter::rename_category(category, new_name);
+            modes::alter::rename_category(category, new_name);
         }
         CategorySubcommands::List => {
             modes::alter::list_all_categories();
@@ -83,12 +85,10 @@ fn dispatch_quiz_subcommands(subcommand: &QuizSubcommands) {
             modes::alter::unlink_category_from_quiz(category, quiz);
         }
         QuizSubcommands::Rename { quiz, new_name } => {
-            todo!();
-            // modes::alter::rename_quiz(quiz, new_name);
+            modes::alter::rename_quiz(quiz, new_name);
         }
         QuizSubcommands::List => {
-            todo!();
-            // modes::alter::list_all_quizzes();
+            modes::alter::list_all_quizzes();
         }
         QuizSubcommands::ListCategories { quiz } => {
             modes::alter::list_all_categories_in_quiz(quiz);
@@ -113,8 +113,7 @@ fn dispatch_choice_subcommands(subcommand: &ChoiceSubcommands) {
             label,
             new_name,
         } => {
-            todo!();
-            // modes::alter::rename_choice(label, new_name);
+            modes::alter::rename_choice(category, label, new_name);
         }
         ChoiceSubcommands::List { category } => {
             modes::alter::list_all_choices_in_category(category);
@@ -128,6 +127,17 @@ fn dispatch_choice_subcommands(subcommand: &ChoiceSubcommands) {
         }
         ChoiceSubcommands::ToggleStreaks { category, label } => {
             modes::alter::toggle_show_in_streaks_for_choice(category, label);
+        }
+    }
+}
+
+fn dispatch_entries_subcommands(subcommand: &EntriesSubcommands) {
+    match subcommand {
+        EntriesSubcommands::Print { days, output } => {
+            modes::print::print(*days, output);
+        }
+        EntriesSubcommands::PushLatestToYesterday => {
+            modes::alter::move_last_entry_to_yesterday();
         }
     }
 }

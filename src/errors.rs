@@ -7,13 +7,12 @@ pub enum Error {
     IO(std::io::Error),
     CLIParsing(ParsingCommandError),
     DatabaseError(DieselError),
-    InvalidInput(String),
+    CategoryAlreadyExists(String),
+    ChoiceAlreadyExists(String),
+    QuizAlreadyExists(String),
 }
 #[derive(Debug)]
 pub enum ParsingCommandError {
-    TooFewArguments,
-    CommandNotRecognized(String),
-    TooManyArguments,
     QuizNotFound(String),
 }
 
