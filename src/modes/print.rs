@@ -1,8 +1,33 @@
+/// This module contains the logic for the print mode.
 use itertools::Itertools;
 
 use crate::backend::api;
 
-pub fn printable_entries(
+/// Prints the entries from the last `days` days.
+/// If `output` is `None`, the entries are printed to stdout. Otherwise, they are written to the file at `output`.
+pub fn print(days: u32, output: &Option<String>) {
+    let starting_date = chrono::Utc::now().naive_utc() - chrono::Duration::days(days as i64);
+    let end_date = chrono::Utc::now().naive_utc();
+
+    let printable = printable_entries(starting_date, end_date).unwrap();
+    if printable.is_empty() {
+        panic!("No entries found");
+    }
+
+    match output {
+        Some(path) => {
+            std::fs::write(path, printable).unwrap();
+            // TODO: Add a message saying that the entries were written to the file.
+            // TODO: Error handling here if this fails.
+        }
+        None => {
+            println!("{}", printable);
+        }
+    }
+}
+
+/// Returns a formatted string containing all the entries between the two dates.
+fn printable_entries(
     starting_date: chrono::NaiveDateTime,
     end_date: chrono::NaiveDateTime,
 ) -> Result<String, crate::errors::Error> {

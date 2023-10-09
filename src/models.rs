@@ -1,24 +1,26 @@
 pub mod queryable_or_selectable {
+    /// This module contains structs that are used for querying the database.
     use chrono::NaiveDateTime;
     use diesel::prelude::*;
 
-    // #[derive(Queryable, Selectable)]
-    // #[diesel(table_name = crate::backend::schema::quizzes)]
-    // #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-    // pub struct Quiz {
-    //     pub id: i32,
-    //     pub label: String,
-    //     pub command: Option<String>,
-    // }
+    #[derive(Queryable, Selectable, Debug, PartialEq, PartialOrd, Eq, Ord, Clone)]
+    #[diesel(table_name = crate::backend::schema::quizzes)]
+    #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+    pub struct Quiz {
+        pub id: i32,
+        pub label: String,
+        pub command: Option<String>,
+    }
 
-    // #[derive(Queryable, Selectable)]
-    // #[diesel(table_name = crate::backend::schema::quizzes_to_categories)]
-    // #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-    // pub struct QuizToCategory {
-    //     pub id: i32,
-    //     pub quiz_label: String,
-    //     pub category_label: String,
-    // }
+    #[derive(Queryable, Selectable, Debug, PartialEq, PartialOrd, Eq, Ord, Clone)]
+    #[diesel(table_name = crate::backend::schema::quizzes_to_categories)]
+    #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
+    pub struct QuizToCategory {
+        pub id: i32,
+        pub quiz_label: String,
+        pub category_label: String,
+        pub order: i32,
+    }
 
     #[derive(Queryable, Selectable, Debug, PartialEq, PartialOrd, Eq, Ord, Clone)]
     #[diesel(table_name = crate::backend::schema::categories)]
@@ -68,9 +70,10 @@ pub mod queryable_or_selectable {
 }
 
 pub mod insertable {
+    /// This module contains structs that are used for inserting into the database.
     use diesel::prelude::*;
 
-    #[derive(Insertable)]
+    #[derive(Insertable, Default)]
     #[diesel(table_name = crate::backend::schema::quizzes)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct NewQuiz {
@@ -99,6 +102,19 @@ pub mod insertable {
         pub reminder_timer_in_days: Option<i32>,
     }
 
+    impl Default for NewCategory {
+        fn default() -> Self {
+            Self {
+                label: String::new(),
+                prompt: String::new(),
+                category_type: 1,
+                extra_info: None,
+                show_in_streaks: None,
+                reminder_timer_in_days: None,
+            }
+        }
+    }
+
     // #[derive(Insertable)]
     // #[diesel(table_name = crate::backend::schema::category_types)]
     // #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -115,7 +131,7 @@ pub mod insertable {
         pub details: Option<String>,
     }
 
-    #[derive(Insertable)]
+    #[derive(Insertable, Default)]
     #[diesel(table_name = crate::backend::schema::choices)]
     #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
     pub struct NewChoice {

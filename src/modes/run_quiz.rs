@@ -17,15 +17,19 @@ fn get_user_input() -> String {
     }
 }
 
-pub fn quiz_full(content: &[String]) -> Result<(), Error> {
-    if !content.is_empty() {
-        return Err(ParsingCommandError::TooManyArguments.into());
-    }
-
+pub fn quiz_full(quiz_name: &str) -> Result<(), Error> {
+    assert!(
+        !quiz_name.is_empty(),
+        "This should never be empty because we're supposed to parse and handle before this point."
+    );
     let mut inputs = Vec::new();
     let mut entries: Vec<(Option<i32>, Option<i32>, Option<String>)> = Vec::new();
 
-    let categories_and_choices = api::get_categories_and_choices_from_quiz_label("full")?;
+    let categories_and_choices = api::get_categories_and_choices_from_quiz_label(quiz_name)?;
+
+    if categories_and_choices.is_empty() {
+        return Err(ParsingCommandError::QuizNotFound(quiz_name.to_owned()).into());
+    }
 
     for (cat, choices) in categories_and_choices.iter() {
         println!("{}", cat.prompt);

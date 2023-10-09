@@ -1,3 +1,4 @@
+/// This module is responsible for loading the TOML file and parsing it into a struct.
 extern crate dotenvy;
 extern crate toml;
 
